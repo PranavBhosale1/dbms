@@ -1,0 +1,87 @@
+-- Step 1: Create Tables in the Correct Order
+
+CREATE TABLE Author (
+    AuthorId INT PRIMARY KEY,8
+    AuthorName VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Publisher (
+    PublisherId INT PRIMARY KEY,
+    PublisherName VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Book (
+    BookId INT PRIMARY KEY,
+    Title VARCHAR(100) NOT NULL,
+    AuthorId INT NOT NULL,
+    PublisherId INT NOT NULL,
+    Year INT,
+    FOREIGN KEY (AuthorId) REFERENCES Author(AuthorId),
+    FOREIGN KEY (PublisherId) REFERENCES Publisher(PublisherId)
+);
+
+CREATE TABLE Member (
+    MemberId INT PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Address VARCHAR(100),
+    Phone VARCHAR(15)
+);
+
+CREATE TABLE Loan (
+    LoanId INT PRIMARY KEY,
+    BookId INT NOT NULL,
+    MemberId INT NOT NULL,
+    IssueDate DATE NOT NULL,
+    DueDate DATE NOT NULL,
+    ReturnDate DATE,
+    FOREIGN KEY (BookId) REFERENCES Book(BookId),
+    FOREIGN KEY (MemberId) REFERENCES Member(MemberId)
+);
+
+-- Step 2: Insert Sample Data
+
+-- Authors
+INSERT INTO Author (AuthorId, AuthorName) VALUES
+(1, 'J.K. Rowling'),
+(2, 'George Orwell'),
+(3, 'Jane Austen');
+
+-- Publishers
+INSERT INTO Publisher (PublisherId, PublisherName) VALUES
+(1, 'Bloomsbury'),
+(2, 'Penguin Books'),
+(3, 'Oxford Press');
+
+-- Books
+INSERT INTO Book (BookId, Title, AuthorId, PublisherId, Year) VALUES
+(101, 'Harry Potter and the Philosopher\'s Stone', 1, 1, 1997),
+(102, '1984', 2, 2, 1949),
+(103, 'Pride and Prejudice', 3, 3, 1813);
+
+-- Members
+INSERT INTO Member (MemberId, Name, Address, Phone) VALUES
+(1, 'Alice Smith', '123 Maple St', '1234567890'),
+(2, 'Bob Johnson', '456 Oak St', '9876543210');
+
+-- Loans
+INSERT INTO Loan (LoanId, BookId, MemberId, IssueDate, DueDate, ReturnDate) VALUES
+(1, 101, 1, '2025-05-01', '2025-05-15', '2025-05-10'),
+(2, 102, 2, '2025-05-05', '2025-05-19', NULL);
+
+-- Step 3: Create Views
+
+-- Book and Author View
+CREATE VIEW BookAuthorView AS
+SELECT b.BookId, b.Title, a.AuthorName
+FROM Book b
+JOIN Author a ON b.AuthorId = a.AuthorId;
+
+-- Loan and Member View
+CREATE VIEW LoanMemberView AS
+SELECT l.LoanId, l.BookId, m.Name AS MemberName, l.IssueDate, l.DueDate
+FROM Loan l
+JOIN Member m ON l.MemberId = m.MemberId;
+
+-- Step 4: Create Index on AuthorName
+CREATE INDEX idx_Author_AuthorName
+ON Author (AuthorName ASC);

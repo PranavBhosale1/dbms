@@ -1,0 +1,60 @@
+CREATE TABLE Stud_Marks (
+    name VARCHAR(50),
+    total_marks INT
+);
+
+CREATE TABLE Result (
+    Roll INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(50),
+    Class VARCHAR(30)
+);
+
+-- Insert sample data
+INSERT INTO Stud_Marks VALUES
+('Alice', 995),
+('Bob', 910),
+('Charlie', 860),
+('Dave', 700);
+
+DELIMITER $$
+
+CREATE PROCEDURE proc_Grade()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE v_name VARCHAR(50);
+    DECLARE v_marks INT;
+    DECLARE v_class VARCHAR(30);
+
+    DECLARE cur CURSOR FOR SELECT name, total_marks FROM Stud_Marks;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO v_name, v_marks;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        IF v_marks BETWEEN 990 AND 1500 THEN
+            SET v_class = 'Distinction';
+        ELSEIF v_marks BETWEEN 900 AND 989 THEN
+            SET v_class = 'First Class';
+        ELSEIF v_marks BETWEEN 825 AND 899 THEN
+            SET v_class = 'Higher Second Class';
+        ELSE
+            SET v_class = 'No Class';
+        END IF;
+
+        INSERT INTO Result (Name, Class)
+        VALUES (v_name, v_class);
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+CALL proc_Grade();
+
+SELECT * FROM Result;

@@ -1,0 +1,44 @@
+-- Step 1: Create Tables
+CREATE TABLE n_rollcall (
+    roll_no INT PRIMARY KEY,
+    name VARCHAR(50),
+    dateofentry DATE
+);
+
+CREATE TABLE o_rollcall (
+    roll_no INT PRIMARY KEY,
+    name VARCHAR(50),
+    dateofentry DATE
+);
+
+-- Step 2: Insert Data
+INSERT INTO n_rollcall VALUES 
+(101, 'rahul', '2024-04-10'),
+(102, 'neha', '2024-04-12'),
+(103, 'amit', '2024-04-15'),
+(104, 'priya', '2024-04-18');
+
+INSERT INTO o_rollcall VALUES 
+(102, 'neha', '2024-04-12'),
+(104, 'priya', '2024-04-18');
+
+DELIMITER //
+
+CREATE PROCEDURE merge_rollcall(
+    IN user_roll INT,
+    IN user_name VARCHAR(50),
+    IN user_date DATE
+)
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM o_rollcall WHERE roll_no = user_roll) THEN
+        INSERT INTO o_rollcall VALUES (user_roll, user_name, user_date);
+    END IF;
+
+    -- Show updated o_rollcall table
+    SELECT * FROM o_rollcall;
+END;
+//
+
+DELIMITER ;
+
+CALL merge_rollcall(101, 'rahul', '2024-04-10');

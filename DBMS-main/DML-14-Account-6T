@@ -1,0 +1,111 @@
+CREATE TABLE Borrower (
+    Rollin INT NOT NULL,
+    Name VARCHAR(100),
+    DateofIssue DATE,
+    NameofBook VARCHAR(100),
+    Status CHAR(1), -- 'I' for Issued, 'R' for Returned
+    PRIMARY KEY (Rollin, NameofBook)
+);
+
+CREATE TABLE Fine (
+    FinetD INT AUTO_INCREMENT PRIMARY KEY,
+    Roll_no INT,
+    Date DATE,
+    Amt DECIMAL(10, 2)
+);
+
+CREATE TABLE Library (
+    bid INT PRIMARY KEY,
+    bname VARCHAR(100),
+    doi DATE,
+    status CHAR(1), -- Optional: 'A' for available, 'I' for issued
+    noc INT    -- Number of copies available
+);
+
+CREATE TABLE transaction (
+    tid INT AUTO_INCREMENT PRIMARY KEY,
+    bid INT,
+    bname VARCHAR(100),
+    status CHAR(1), -- 'I' for Issued, 'R' for Returned
+    txn_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DELIMITER $$
+
+CREATE PROCEDURE ProcessBookReturn(
+    IN p_roll_no INT,
+    IN p_book_name VARCHAR(100))
+BEGIN
+    DECLARE v_date_of_issue DATE;
+    DECLARE v_days INT;
+    DECLARE v_fine_amt DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_status CHAR(1);
+    DECLARE v_bid INT;
+    DECLARE v_noc INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SELECT 'An error occurred during the transaction.' AS Message;
+    END;
+
+    START TRANSACTION;
+
+    -- Step 1: Fetch book details
+    SELECT b.DateofIssue, b.Status, l.bid, l.noc
+    INTO v_date_of_issue, v_status, v_bid, v_noc
+    FROM Borrower b
+    JOIN Library l ON b.NameofBook = l.bname
+    WHERE b.Rollin = p_roll_no AND b.NameofBook = p_book_name
+    LIMIT 1;
+
+    -- Step 2: Check if the book is issued
+    IF v_status != 'I' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Book is not issued or already returned.';
+    END IF;
+
+    -- Step 3: Calculate number of days since issue
+    SET v_days = DATEDIFF(CURDATE(), v_date_of_issue);
+
+    -- Step 4: Calculate fine
+    IF v_days BETWEEN 15 AND 30 THEN
+        SET v_fine_amt = v_days * 5;
+    ELSEIF v_days > 30 THEN
+        SET v_fine_amt = (30 * 5) + ((v_days - 30) * 50);
+    ELSE
+        SET v_fine_amt = 0;
+    END IF;
+
+    -- Step 5: Update Borrower status
+    UPDATE Borrower
+    SET Status = 'R'
+    WHERE Rollin = p_roll_no AND NameofBook = p_book_name;
+
+    -- Step 6: Update number of copies in Library
+    UPDATE Library
+    SET noc = noc + 1
+    WHERE bid = v_bid;
+
+    -- Step 7: Insert fine details (if any)
+    IF v_fine_amt > 0 THEN
+        INSERT INTO Fine (Roll_no, Date, Amt)
+        VALUES (p_roll_no, CURDATE(), v_fine_amt);
+    END IF;
+
+    -- Step 8: Log into transaction table
+    INSERT INTO transaction (bid, bname, status)
+    VALUES (v_bid, p_book_name, 'R');
+
+    COMMIT;
+
+    -- Step 9: Display message
+    SELECT CONCAT('Book returned successfully. Fine amount: Rs ', v_fine_amt) AS Message;
+
+END$$
+
+DELIMITER ;
+
+-- Example calls to the procedure
+CALL ProcessBookReturn(101, 'Database Management Systems');
+CALL ProcessBookReturn(102, 'Operating Systems');

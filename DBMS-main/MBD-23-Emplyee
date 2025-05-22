@@ -1,0 +1,270 @@
+// 1. Create Collection and Insert Sample Data
+db.createCollection("Employee");
+
+db.Employee.insertMany([
+  { emp_id: 1, emp_name: "John", emp_dept: "HR", salary: 50000 },
+  { emp_id: 2, emp_name: "Alice", emp_dept: "IT", salary: 60000 },
+  { emp_id: 3, emp_name: "Bob", emp_dept: "HR", salary: 55000 },
+  { emp_id: 4, emp_name: "Eve", emp_dept: "Finance", salary: 70000 },
+  { emp_id: 5, emp_name: "Sam", emp_dept: "IT", salary: 65000 }
+]);
+
+// 2. Aggregation Operations
+
+// Example 1: Group by Department and Calculate Average Salary
+db.Employee.aggregate([
+  {
+    $group: {
+      _id: "$emp_dept",
+      averageSalary: { $avg: "$salary" },
+      totalEmployees: { $sum: 1 }
+    }
+  },
+  { $sort: { averageSalary: -1 } }
+]);
+
+// Example 2: Filter Employees with Salary > 55000
+db.Employee.aggregate([
+  {
+    $match: { salary: { $gt: 55000 } }
+  },
+  {
+    $project: { emp_name: 1, salary: 1, emp_dept: 1, _id: 0 }
+  },
+  { $sort: { salary: -1 } }
+]);
+
+// Example 3: Sort Employees by Salary (Descending)
+db.Employee.aggregate([
+  {
+    $sort: { salary: -1 }
+  }
+]);
+
+// Example 4: Calculate Total Salary Per Department
+db.Employee.aggregate([
+  {
+    $group: {
+      _id: "$emp_dept",
+      totalSalary: { $sum: "$salary" }
+    }
+  },
+  { $sort: { totalSalary: -1 } }
+]);
+
+// Example 5: List Employees with Department Summary
+db.Employee.aggregate([
+  {
+    $group: {
+      _id: "$emp_dept",
+      employees: { $push: "$emp_name" },
+      totalSalary: { $sum: "$salary" },
+      avgSalary: { $avg: "$salary" }
+    }
+  }
+]);
+
+// 3. Indexing
+
+// Create single field index
+db.Employee.createIndex({ emp_dept: 1 });
+
+// Create compound index
+db.Employee.createIndex({ emp_dept: 1, salary: -1 });
+
+// Query using index with explain
+db.Employee.find({ emp_dept: "HR" }).explain("executionStats");
+db.Employee.find({ emp_dept: "IT", salary: { $gt: 55000 } }).explain("executionStats");
+
+// Drop indexes
+db.Employee.dropIndex({ emp_dept: 1 });
+db.Employee.dropIndexes();
+--------------------------------------------------------------------------------------------
+Here’s an **in-depth explanation** of the key concepts used in the **Aggregation and Indexing** operations on the MongoDB `Employee` collection, including **how they work internally**, **why they're used**, and **best practices**.
+
+---
+
+## 🔷 PART 1: Aggregation Framework in MongoDB
+
+MongoDB’s **aggregation framework** is used for **data processing and transformation** — similar to SQL’s `GROUP BY`, `HAVING`, and aggregate functions.
+
+### 🔹 Aggregation Pipeline
+
+A pipeline consists of **stages** like `$match`, `$group`, `$sort`, etc. The documents pass through these stages and are transformed accordingly.
+
+#### 🧱 Common Stages:
+
+---
+
+### 1. `$match`
+
+* **Purpose**: Filters documents based on conditions.
+* **Example**:
+
+  ```js
+  { $match: { salary: { $gt: 55000 } } }
+  ```
+* **Internal working**: Similar to SQL’s `WHERE` clause. Best placed **early** in the pipeline for performance.
+
+---
+
+### 2. `$group`
+
+* **Purpose**: Groups documents by a field and performs aggregation operations like `$sum`, `$avg`, `$min`, `$max`, `$push`.
+* **Example**:
+
+  ```js
+  {
+    $group: {
+      _id: "$emp_dept",
+      averageSalary: { $avg: "$salary" }
+    }
+  }
+  ```
+* **Internal working**: MongoDB creates a hash table using `_id` as a key to group documents.
+
+---
+
+### 3. `$project`
+
+* **Purpose**: Shapes the output documents, includes or excludes fields.
+* **Example**:
+
+  ```js
+  { $project: { emp_name: 1, salary: 1, _id: 0 } }
+  ```
+* **Best use**: Reduce payload size and make results cleaner.
+
+---
+
+### 4. `$sort`
+
+* **Purpose**: Sorts documents based on one or more fields.
+* **Example**:
+
+  ```js
+  { $sort: { salary: -1 } }
+  ```
+* **Note**: Use indexes where possible for faster sorting.
+
+---
+
+### 5. `$push`
+
+* **Purpose**: Aggregates values into an array.
+* **Example**:
+
+  ```js
+  employees: { $push: "$emp_name" }
+  ```
+* **Used with `$group`**: Collects all employee names in the same department.
+
+---
+
+## ✅ Example Flow:
+
+```js
+db.Employee.aggregate([
+  { $match: { salary: { $gt: 55000 } } },
+  { $group: { _id: "$emp_dept", avgSal: { $avg: "$salary" } } },
+  { $sort: { avgSal: -1 } }
+]);
+```
+
+---
+
+## 🔷 PART 2: Indexing in MongoDB
+
+### 🔹 What is an Index?
+
+An **index** is a data structure (typically a **B-Tree**) that improves the speed of search operations on a collection at the cost of additional writes and storage.
+
+Think of it like an **index at the back of a book** — instead of flipping through every page, you jump directly to what you want.
+
+---
+
+### 🔹 Types of Indexes
+
+1. **Single Field Index**
+
+   ```js
+   db.Employee.createIndex({ emp_dept: 1 });
+   ```
+
+   * Used to optimize queries filtering on `emp_dept`.
+
+2. **Compound Index**
+
+   ```js
+   db.Employee.createIndex({ emp_dept: 1, salary: -1 });
+   ```
+
+   * Optimizes queries that filter or sort on both fields.
+   * **Order matters**: MongoDB uses the index **left to right**.
+
+3. **Multikey Index** (for arrays)
+   Automatically created when indexing an array field.
+
+4. **Text Index** (for full-text search)
+
+5. **Hashed Index** (used for sharding)
+
+---
+
+### 🔹 `explain("executionStats")`
+
+Used to analyze how MongoDB executes a query.
+
+```js
+db.Employee.find({ emp_dept: "HR" }).explain("executionStats");
+```
+
+* Shows whether the query used an **index scan** (`IXSCAN`) or a **collection scan** (`COLLSCAN`).
+* Helps in identifying slow queries and index effectiveness.
+
+---
+
+### 🔹 Dropping Indexes
+
+```js
+db.Employee.dropIndex({ emp_dept: 1 });
+db.Employee.dropIndexes();
+```
+
+* Remove specific or all indexes.
+* Useful during performance tuning or schema redesign.
+
+---
+
+## 📋 Best Practices for Aggregation & Indexing
+
+| Scenario                             | Best Practice                      |
+| ------------------------------------ | ---------------------------------- |
+| Filtering data                       | Use `$match` early in pipeline     |
+| Grouping by field                    | Use `$group` with meaningful `_id` |
+| Reducing result size                 | Use `$project` to limit fields     |
+| Repeated queries on same field       | Create single field index          |
+| Complex queries with multiple fields | Use compound indexes               |
+| Performance analysis                 | Use `explain("executionStats")`    |
+
+---
+
+## 📌 Real-world Example Scenario
+
+Imagine you're building an HR dashboard:
+
+* You want to show:
+
+  * **Average salary by department**
+  * **List of employees in each department**
+  * **Top earners across departments**
+
+Aggregation pipelines and indexing allow you to:
+
+* Get summaries with `$group`, `$avg`, `$push`
+* Filter and sort efficiently with `$match` + indexes
+* Improve dashboard load speed using indexes
+
+---
+
+Would you like the same topic explained with **visual diagrams** or **performance benchmarks** next?

@@ -1,0 +1,194 @@
+-- Library Table
+CREATE TABLE Library (
+    bid INT PRIMARY KEY,
+    bname VARCHAR(100),
+    doi DATE,
+    status VARCHAR(20)
+);
+
+-- Audit Table
+CREATE TABLE Library_Audit (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    bid INT,
+    bname VARCHAR(100),
+    noc INT,
+    timestampofquery TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fine INT DEFAULT 0
+);
+
+-- Trigger 1: NOC adjustment
+DELIMITER //
+
+CREATE TRIGGER trg_adjust_noc
+AFTER INSERT ON Library
+FOR EACH ROW
+BEGIN
+    DECLARE v_noc_change INT DEFAULT 0;
+
+    IF NEW.status = 'ISSUE' THEN
+        SET v_noc_change = -1;
+    ELSEIF NEW.status = 'RETURN' THEN
+        SET v_noc_change = 1;
+    END IF;
+
+    INSERT INTO Library_Audit (bid, bname, noc)
+    VALUES (NEW.bid, NEW.bname, v_noc_change);
+END;
+//
+
+-- Trigger 2: Fine check without updating Library table
+CREATE TRIGGER trg_check_fine
+AFTER UPDATE ON Library
+FOR EACH ROW
+BEGIN
+    DECLARE v_days_late INT DEFAULT 0;
+    DECLARE v_fine INT DEFAULT 0;
+
+    SET v_days_late = DATEDIFF(CURDATE(), NEW.doi);
+
+    IF v_days_late > 20 AND NEW.status = 'RETURN' THEN
+        SET v_fine = v_days_late * 10;
+
+        INSERT INTO Library_Audit (bid, bname, noc, fine)
+        VALUES (NEW.bid, NEW.bname, 0, v_fine);
+    END IF;
+END;
+//
+
+DELIMITER ;
+
+-- Insert old issued book (25 days ago)
+INSERT INTO Library VALUES (101, 'C Programming', CURDATE() - INTERVAL 25 DAY, 'RETURN');
+
+-- Trigger runs here
+UPDATE Library SET status = 'RETURN' WHERE bid = 101;
+
+-- Check audit
+SELECT * FROM Library_Audit;
+
+
+
+1. Theory (Detailed)
+🧾 Core Concepts Used
+🏛️ Tables
+Library: Stores book records with issue/return status.
+
+Library_Audit: Logs historical data like book status changes, number of copies (noc), timestamps, and fines.
+
+🧪 Triggers
+Triggers are procedural database operations that automatically execute in response to specific events (INSERT, UPDATE, etc.).
+
+In this case:
+
+Trigger 1 (trg_adjust_noc) runs after an INSERT on the Library table to record whether a book was issued or returned.
+
+Trigger 2 (trg_check_fine) runs after an UPDATE to calculate and log a fine if a book was returned late.
+
+Triggers improve automation, data consistency, and enforce business rules directly within the database.
+
+📊 Audit Trail
+The Library_Audit table serves as a log/history table, preserving a timeline of actions for:
+
+Monitoring user behavior.
+
+Ensuring accountability.
+
+Supporting rollback or investigation of anomalies.
+
+✅ 2. Why Our Solution Satisfies the Problem
+✅ Automation and Enforcement
+Book issue and return operations automatically update audit logs using triggers—no manual tracking needed.
+
+Fine calculation is embedded inside the trigger, reducing application-layer logic.
+
+✅ Business Logic Implementation
+Books issued decrease available count (noc = -1).
+
+Books returned increase the count (noc = +1).
+
+Late returns (after 20 days) are fined at ₹10 per day.
+
+✅ Historical Record-Keeping
+Every transaction is recorded in the Library_Audit table with a timestamp:
+
+Ensures accountability of book borrowing.
+
+Preserves return history and fines for analysis or billing.
+
+✅ Separation of Concerns
+Main Library table holds only current state.
+
+Library_Audit holds event-based logs (insertions and fines).
+
+This structure aligns with best practices in database design: normalization, traceability, and automation.
+
+🔍 3. Code Working Explanation
+🔸 Library Table
+Stores book information:
+
+bid: Book ID (Primary Key)
+
+bname: Book name
+
+doi: Date of issue
+
+status: Either 'ISSUE' or 'RETURN'
+
+🔸 Library_Audit Table
+Tracks:
+
+noc: Change in number of copies (−1 for issue, +1 for return)
+
+fine: Calculated fine, default 0
+
+timestampofquery: Automatically records current timestamp
+
+🔸 Trigger 1: trg_adjust_noc
+When? After inserting a new book transaction.
+
+Logic:
+
+If status = 'ISSUE', set noc = -1
+
+If status = 'RETURN', set noc = +1
+
+Insert entry into Library_Audit
+
+Ensures each issue/return is recorded and adjusted in audit.
+
+🔸 Trigger 2: trg_check_fine
+When? After updating a book record (e.g., marking a return).
+
+Logic:
+
+Calculate v_days_late = current date − doi
+
+If days late > 20 and status = 'RETURN', compute fine as v_days_late × ₹10
+
+Log fine in Library_Audit (with noc = 0)
+
+Ensures late return fine is calculated and automatically recorded.
+
+🔸 Test Case Executed
+sql
+Copy
+Edit
+-- Insert book marked as RETURN, issued 25 days ago
+INSERT INTO Library VALUES (101, 'C Programming', CURDATE() - INTERVAL 25 DAY, 'RETURN');
+
+-- Trigger 1 runs: Adds entry to Library_Audit with noc = +1
+
+-- Manually update to same status to activate Trigger 2
+UPDATE Library SET status = 'RETURN' WHERE bid = 101;
+
+-- Trigger 2 runs: Adds fine = ₹250 (25 days * ₹10)
+
+-- View audit table
+SELECT * FROM Library_Audit;
+✅ Expected Outcome
+Library_Audit should contain two entries:
+
+noc = +1, fine = 0 (from insert trigger)
+
+noc = 0, fine = 250 (from update trigger)
+

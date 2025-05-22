@@ -1,0 +1,66 @@
+-- Step 1: Create the table
+CREATE TABLE employee_salary (
+    emp_no INT PRIMARY KEY,
+    basic INT,
+    hra INT,
+    da INT,
+    total_deduction INT,
+    net_salary INT,
+    gross_salary INT
+);
+
+-- Step 2: Insert sample data
+INSERT INTO employee_salary VALUES
+(101, 50000, 10000, 5000, 7000, 58000, 65000),
+(102, 60000, 12000, 6000, 8000, 70000, 78000),
+(103, 45000, 9000, 4500, 6500, 50000, 56500),
+(104, 70000, 14000, 7000, 10000, 87000, 97000);
+
+-- Step 3: Define the procedure
+DELIMITER //
+
+CREATE PROCEDURE calculate_tax()
+BEGIN
+    -- Declare variables at the top
+    DECLARE x INT DEFAULT 0;
+    DECLARE y INT DEFAULT 0;
+    DECLARE z INT DEFAULT 0;
+    DECLARE a INT DEFAULT 0;
+    DECLARE b INT DEFAULT 0;
+    DECLARE c INT DEFAULT 0;
+    DECLARE d INT DEFAULT 0;
+    DECLARE finished INT DEFAULT 0;
+    DECLARE tax INT;
+
+    -- Declare cursor and handler
+    DECLARE cur CURSOR FOR 
+        SELECT emp_no, basic, hra, da, total_deduction, net_salary, gross_salary 
+        FROM employee_salary 
+        ORDER BY emp_no;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+
+    -- Open cursor
+    OPEN cur;
+
+    emp_loop: LOOP
+        FETCH cur INTO x, y, z, a, b, c, d;
+        IF finished = 1 THEN 
+            LEAVE emp_loop;
+        END IF;
+
+        SET tax = d * 0.1;
+
+        -- Output result for each employee
+        SELECT x AS emp_no, d AS gross_salary, tax AS tax;
+    END LOOP;
+
+    -- Close cursor
+    CLOSE cur;
+END;
+//
+
+DELIMITER ;
+
+-- Step 4: Call the procedure
+CALL calculate_tax();

@@ -1,0 +1,81 @@
+-- Step 1: Create Table
+CREATE TABLE Students (
+  stud_id INT PRIMARY KEY,
+  stud_name VARCHAR(50),
+  sub1 INT,
+  sub2 INT,
+  sub3 INT,
+  sub4 INT
+);
+
+-- Step 2: Insert Sample Data
+INSERT INTO Students VALUES (1, 'Rahul', 78, 85, 67, 90);
+INSERT INTO Students VALUES (2, 'Sneha', 88, 92, 80, 76);
+INSERT INTO Students VALUES (3, 'Amit', 65, 70, 60, 75);
+
+-- Step 3: Stored Procedure to Calculate Total and Percentage
+DELIMITER //
+
+CREATE PROCEDURE GetStudentMarks (IN in_id INT)
+BEGIN
+  DECLARE v_name VARCHAR(50);
+  DECLARE v_s1 INT;
+  DECLARE v_s2 INT;
+  DECLARE v_s3 INT;
+  DECLARE v_s4 INT;
+  DECLARE v_total INT;
+  DECLARE v_percent DECIMAL(5,2);
+
+  -- Check if student exists
+  IF EXISTS (SELECT 1 FROM Students WHERE stud_id = in_id) THEN
+    SELECT stud_name, sub1, sub2, sub3, sub4
+    INTO v_name, v_s1, v_s2, v_s3, v_s4
+    FROM Students
+    WHERE stud_id = in_id;
+
+    SET v_total = v_s1 + v_s2 + v_s3 + v_s4;
+    SET v_percent = (v_total / 400) * 100;
+
+    SELECT 
+      v_name AS Name,
+      v_total AS Total_Marks,
+      v_percent AS Percentage;
+  ELSE
+    SELECT CONCAT('No student found with ID ', in_id) AS Message;
+  END IF;
+END;
+//
+
+DELIMITER ;
+
+-- Step 4: Call the Procedure (Change ID as needed)
+CALL GetStudentMarks(1);
+-------------------------------------
+// Step 1: Insert data
+db.Students.insertMany([
+  { stud_id: 1, stud_name: "Rahul", stud_addr: "Pune", stud_marks: 78 },
+  { stud_id: 2, stud_name: "Sneha", stud_addr: "Mumbai", stud_marks: 88 },
+  { stud_id: 3, stud_name: "Amit", stud_addr: "Delhi", stud_marks: 67 },
+  { stud_id: 4, stud_name: "Priya", stud_addr: "Pune", stud_marks: 91 },
+  { stud_id: 5, stud_name: "Arjun", stud_addr: "Mumbai", stud_marks: 83 }
+]);
+
+// Step 2: Map function
+var mapFunction = function() {
+  emit(this.stud_addr, 1);
+};
+
+// Step 3: Reduce function
+var reduceFunction = function(key, values) {
+  return Array.sum(values);
+};
+
+// Step 4: Execute MapReduce
+db.Students.mapReduce(
+  mapFunction,
+  reduceFunction,
+  { out: "StudentCountPerCity" }
+);
+
+// Step 5: Display results
+printjson(db.StudentCountPerCity.find().toArray());

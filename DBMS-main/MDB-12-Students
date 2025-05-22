@@ -1,0 +1,217 @@
+// Use database
+use universityDB
+
+// Create Students collection with sample documents
+db.Students.insertMany([
+  { stud_id: 1, stud_name: "Rahul", stud_addr: "Pune", stud_marks: 78 },
+  { stud_id: 2, stud_name: "Sneha", stud_addr: "Mumbai", stud_marks: 88 },
+  { stud_id: 3, stud_name: "Amit", stud_addr: "Delhi", stud_marks: 67 },
+  { stud_id: 4, stud_name: "Priya", stud_addr: "Pune", stud_marks: 91 },
+  { stud_id: 5, stud_name: "Arjun", stud_addr: "Bangalore", stud_marks: 83 }
+])
+
+// Create single field index on stud_name
+db.Students.createIndex({ stud_name: 1 })
+
+// Create compound index on stud_addr and stud_marks
+db.Students.createIndex({ stud_addr: 1, stud_marks: -1 })
+
+// Create unique index on stud_id
+db.Students.createIndex({ stud_id: 1 }, { unique: true })
+
+// Create text index on stud_name and stud_addr
+db.Students.createIndex({ stud_name: "text", stud_addr: "text" })
+
+// Query using index on stud_name
+db.Students.find({ stud_name: "Priya" })
+
+// Query using compound index
+db.Students.find({ stud_addr: "Pune" }).sort({ stud_marks: -1 })
+
+// Query using text search
+db.Students.find({ $text: { $search: "Pune" } })
+
+// Check index usage
+db.Students.find({ stud_name: "Priya" }).explain("executionStats")
+
+// Use database
+use universityDB
+
+// Insert more documents
+db.Students.insertMany([
+  { stud_id: 6, stud_name: "Kiran", stud_addr: "Nagpur", stud_marks: 55 },
+  { stud_id: 7, stud_name: "Meera", stud_addr: "Pune", stud_marks: 95 },
+  { stud_id: 8, stud_name: "Tarun", stud_addr: "Delhi", stud_marks: 65 },
+  { stud_id: 9, stud_name: "Neha", stud_addr: "Mumbai", stud_marks: 85 },
+  { stud_id: 10, stud_name: "Rohit", stud_addr: "Bangalore", stud_marks: 70 }
+])
+
+// Find students with marks greater than 80
+db.Students.find({ stud_marks: { $gt: 80 } })
+
+// Find students sorted by marks descending
+db.Students.find().sort({ stud_marks: -1 })
+
+// Find top 3 students by marks
+db.Students.find().sort({ stud_marks: -1 }).limit(3)
+
+// Count number of students from Pune
+db.Students.countDocuments({ stud_addr: "Pune" })
+
+// Project only names and marks of students
+db.Students.find({}, { stud_name: 1, stud_marks: 1, _id: 0 })
+
+// Update student marks by 5 for those scoring below 60
+db.Students.updateMany(
+  { stud_marks: { $lt: 60 } },
+  { $inc: { stud_marks: 5 } }
+)
+
+// Delete student with stud_id = 10
+db.Students.deleteOne({ stud_id: 10 })
+
+// Aggregate: Average marks of students per city
+db.Students.aggregate([
+  { $group: { _id: "$stud_addr", avgMarks: { $avg: "$stud_marks" } } }
+])
+
+// Create index on stud_marks
+db.Students.createIndex({ stud_marks: 1 })
+
+// Drop index on stud_name
+db.Students.dropIndex("stud_name_1")
+
+// Drop all indexes except _id
+db.Students.dropIndexes()
+------------------------------------------------------------------------------------------------------
+Certainly! Let’s dive deeper into **indexing and querying in MongoDB** using the `Students` collection. We'll break it down conceptually and practically:
+
+---
+
+## ✅ **12. Implement Indexing and Querying in MongoDB**
+
+### 📌 Collection: `Students(stud_id, stud_name, stud_addr, stud_marks)`
+
+---
+
+## 🔹 A. **What is Indexing in MongoDB?**
+
+An **index** in MongoDB is similar to an index in a book. It **improves the performance** of queries by allowing the database engine to **locate data without scanning every document** in a collection.
+
+Without an index, MongoDB must perform a **collection scan**—i.e., scan every document to select those that match the query.
+
+---
+
+## 🔹 B. **Types of Indexes You Can Create on `Students`**
+
+| Index Type         | Syntax                                     | Use Case                                                   |
+| ------------------ | ------------------------------------------ | ---------------------------------------------------------- |
+| **Single Field**   | `{ stud_name: 1 }`                         | Fast lookup by name                                        |
+| **Compound Index** | `{ stud_addr: 1, stud_marks: -1 }`         | Optimize queries filtering by address and sorting by marks |
+| **Text Index**     | `{ stud_name: "text", stud_addr: "text" }` | For text search                                            |
+| **Unique Index**   | `{ stud_id: 1 }, unique: true`             | Ensure no duplicate IDs                                    |
+
+---
+
+## 🔹 C. **Creating Indexes in MongoDB**
+
+### 1. **Single Field Index**
+
+```js
+db.Students.createIndex({ stud_name: 1 })
+```
+
+This sorts `stud_name` in **ascending order** and helps optimize queries like:
+
+```js
+db.Students.find({ stud_name: "Amit" })
+```
+
+### 2. **Compound Index**
+
+```js
+db.Students.createIndex({ stud_addr: 1, stud_marks: -1 })
+```
+
+Optimizes:
+
+```js
+db.Students.find({ stud_addr: "Pune" }).sort({ stud_marks: -1 })
+```
+
+### 3. **Unique Index on stud\_id**
+
+```js
+db.Students.createIndex({ stud_id: 1 }, { unique: true })
+```
+
+Prevents inserting duplicate student IDs.
+
+---
+
+## 🔹 D. **Querying with Indexing in Practice**
+
+Let’s say you have a collection of 10,000 student records. You want to:
+
+### ✅ **Find high-performing students in Pune**
+
+```js
+db.Students.find({ stud_addr: "Pune", stud_marks: { $gt: 85 } }).sort({ stud_marks: -1 })
+```
+
+If you have a compound index on `stud_addr` and `stud_marks`, this query will be **very efficient**.
+
+---
+
+## 🔹 E. **Checking Index Efficiency**
+
+Use the `.explain()` function:
+
+```js
+db.Students.find({ stud_name: "Sneha" }).explain("executionStats")
+```
+
+Look at:
+
+* `"executionStages"` → to see if index was used.
+* `"totalKeysExamined"` vs. `"totalDocsExamined"` → lower means better.
+
+---
+
+## 🔹 F. **Best Practices for Indexing**
+
+1. **Index fields used in filtering (`find`) or sorting (`sort`).**
+2. Avoid indexing fields with high write churn (frequent updates).
+3. Use **compound indexes** for multi-field filters.
+4. Keep index size in check—**too many indexes slow down writes**.
+5. Use `covered queries` (queries satisfied entirely by indexes).
+
+---
+
+## 🔹 G. **Text Search with Indexing**
+
+If you want to search by keywords:
+
+```js
+db.Students.createIndex({ stud_name: "text", stud_addr: "text" })
+```
+
+Then:
+
+```js
+db.Students.find({ $text: { $search: "Pune" } })
+```
+
+---
+
+## 🔹 H. Summary: Why It Matters
+
+| Without Indexing                   | With Indexing                            |
+| ---------------------------------- | ---------------------------------------- |
+| Full collection scan               | Fast lookup using B-tree traversal       |
+| Poor performance on large datasets | High performance, especially for queries |
+| More CPU and memory usage          | Efficient, low-resource querying         |
+
+---
+
+Let me know if you'd like to see how MongoDB handles index selection or simulate index usage with large data sets using `$sample` or mock data generation.

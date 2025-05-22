@@ -1,0 +1,140 @@
+-- Drop tables if they exist to avoid errors on re-run
+DROP TABLE IF EXISTS DEPENDENT;
+DROP TABLE IF EXISTS WORKS_ON;
+DROP TABLE IF EXISTS PROJECT;
+DROP TABLE IF EXISTS DEPT_LOCATIONS;
+DROP TABLE IF EXISTS DEPARTMENT;
+DROP TABLE IF EXISTS EMPLOYEE;
+
+-- Create EMPLOYEE table (full version)
+CREATE TABLE EMPLOYEE (
+    Fname VARCHAR(50) NOT NULL,
+    Minit CHAR(1),
+    Lname VARCHAR(50) NOT NULL,
+    Ssn CHAR(9) PRIMARY KEY,
+    Bdate DATE,
+    Address VARCHAR(255),
+    Sex CHAR(1),
+    Salary DECIMAL(10,2),
+    Dno INT
+);
+
+-- Create DEPARTMENT table
+CREATE TABLE DEPARTMENT (
+    Dname VARCHAR(100),
+    Dno INT PRIMARY KEY,
+    Mgr_ssn CHAR(9),
+    Mgr_start_date DATE,
+    FOREIGN KEY (Mgr_ssn) REFERENCES EMPLOYEE(Ssn)
+);
+
+-- Create DEPT_LOCATIONS table
+CREATE TABLE DEPT_LOCATIONS (
+    Dnumber INT,
+    Dlocation VARCHAR(100),
+    FOREIGN KEY (Dnumber) REFERENCES DEPARTMENT(Dno)
+);
+
+-- Create PROJECT table
+CREATE TABLE PROJECT (
+    Pname VARCHAR(100),
+    Pnumber INT PRIMARY KEY,
+    Plocation VARCHAR(100),
+    Dno INT,
+    FOREIGN KEY (Dno) REFERENCES DEPARTMENT(Dno)
+);
+
+-- Create WORKS_ON table
+CREATE TABLE WORKS_ON (
+    Essn CHAR(9),
+    Pno INT,
+    Hours DECIMAL(5,2),
+    FOREIGN KEY (Essn) REFERENCES EMPLOYEE(Ssn),
+    FOREIGN KEY (Pno) REFERENCES PROJECT(Pnumber)
+);
+
+-- Create DEPENDENT table
+CREATE TABLE DEPENDENT (
+    Essn CHAR(9),
+    Dependent_name VARCHAR(50),
+    Sex CHAR(1),
+    Bdate DATE,
+    Relationship VARCHAR(50),
+    FOREIGN KEY (Essn) REFERENCES EMPLOYEE(Ssn)
+);
+
+-- Insert Employees
+INSERT INTO EMPLOYEE VALUES ('John', 'A', 'Smith', '123456789', '1980-01-01', '123 Main St, Houston, Texas', 'M', 60000.00, 1);
+INSERT INTO EMPLOYEE VALUES ('Jane', 'B', 'Doe', '987654321', '1975-05-15', '456 Elm St, Austin, Texas', 'F', 75000.00, 2);
+INSERT INTO EMPLOYEE VALUES ('Mike', 'C', 'Jones', '111223333', '1990-08-20', '789 Oak St, Stafford, Texas', 'M', 50000.00, 1);
+INSERT INTO EMPLOYEE VALUES ('Anna', 'D', 'Smith', '222334444', '1985-12-12', '321 Pine St, Stafford, Texas', 'F', 55000.00, 3);
+
+-- Insert Departments
+INSERT INTO DEPARTMENT VALUES ('Research', 1, '123456789', '2010-01-01');
+INSERT INTO DEPARTMENT VALUES ('Development', 2, '987654321', '2012-06-01');
+INSERT INTO DEPARTMENT VALUES ('HR', 3, '222334444', '2015-03-15');
+
+-- Insert Department Locations
+INSERT INTO DEPT_LOCATIONS VALUES (1, 'Houston');
+INSERT INTO DEPT_LOCATIONS VALUES (2, 'Austin');
+INSERT INTO DEPT_LOCATIONS VALUES (3, 'Stafford');
+
+-- Insert Projects
+INSERT INTO PROJECT VALUES ('ProductX', 101, 'Stafford', 1);
+INSERT INTO PROJECT VALUES ('ProductY', 102, 'Austin', 2);
+INSERT INTO PROJECT VALUES ('ProductZ', 103, 'Stafford', 3);
+
+-- Insert Works_On data
+INSERT INTO WORKS_ON VALUES ('111223333', 101, 20.0);
+INSERT INTO WORKS_ON VALUES ('222334444', 101, 15.0);
+INSERT INTO WORKS_ON VALUES ('987654321', 102, 30.0);
+
+-- Insert Dependents
+INSERT INTO DEPENDENT VALUES ('123456789', 'Sam Smith', 'M', '2005-04-10', 'Son');
+INSERT INTO DEPENDENT VALUES ('987654321', 'Lisa Doe', 'F', '2008-09-22', 'Daughter');
+
+-- Your Queries:
+
+-- 1. Projects in Stafford with manager details
+SELECT P.Pnumber, P.Dno, E.Lname, E.Address, E.Bdate
+FROM PROJECT P
+JOIN DEPARTMENT D ON P.Dno = D.Dno
+JOIN EMPLOYEE E ON D.Mgr_ssn = E.Ssn
+WHERE P.Plocation = 'Stafford';
+
+-- 2. Projects where an employee or manager has last name 'Smith'
+SELECT DISTINCT P.Pnumber
+FROM PROJECT P
+JOIN DEPARTMENT D ON P.Dno = D.Dno
+JOIN EMPLOYEE M ON D.Mgr_ssn = M.Ssn
+LEFT JOIN WORKS_ON W ON P.Pnumber = W.Pno
+LEFT JOIN EMPLOYEE E ON W.Essn = E.Ssn
+WHERE E.Lname = 'Smith' OR M.Lname = 'Smith';
+
+-- 3. Employees living in Houston, Texas
+SELECT * FROM EMPLOYEE WHERE Address LIKE '%Houston, Texas%';
+
+-- 4. Employees working on 'ProductX' with salary increased by 10%
+SELECT E.Ssn, E.Fname, E.Lname, E.Salary * 1.10 AS New_Salary
+FROM EMPLOYEE E
+JOIN WORKS_ON W ON E.Ssn = W.Essn
+JOIN PROJECT P ON W.Pno = P.Pnumber
+WHERE P.Pname = 'ProductX';
+
+-- Additional example: Fetch employees from a simple table with empId, name, dept
+
+-- Create a simple EMPLOYEE_SIMPLE table
+DROP TABLE IF EXISTS EMPLOYEE_SIMPLE;
+
+CREATE TABLE EMPLOYEE_SIMPLE (
+  empId INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  dept TEXT NOT NULL
+);
+
+INSERT INTO EMPLOYEE_SIMPLE VALUES (1, 'Clark', 'Sales');
+INSERT INTO EMPLOYEE_SIMPLE VALUES (2, 'Dave', 'Accounting');
+INSERT INTO EMPLOYEE_SIMPLE VALUES (3, 'Ava', 'Sales');
+
+-- Fetch employees from EMPLOYEE_SIMPLE where dept = 'Sales'
+SELECT * FROM EMPLOYEE_SIMPLE WHERE dept = 'Sales';

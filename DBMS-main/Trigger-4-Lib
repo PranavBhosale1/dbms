@@ -1,0 +1,176 @@
+-- Drop existing tables if needed (for clean setup)
+DROP TABLE IF EXISTS Library_Audit;
+DROP TABLE IF EXISTS Library;
+
+-- Create Library Table
+CREATE TABLE Library (
+    bid INT PRIMARY KEY,
+    bname VARCHAR(100),
+    doi DATE,
+    status VARCHAR(20)
+);
+
+-- Create Audit Table
+CREATE TABLE Library_Audit (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    bid INT,
+    bname VARCHAR(100),
+    doi DATE,
+    status VARCHAR(20),
+    action_type VARCHAR(10), -- 'UPDATE' or 'DELETE'
+    timestampofquery TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Set delimiter for trigger definitions
+DELIMITER //
+
+-- Trigger: Before UPDATE
+CREATE TRIGGER trg_audit_before_update
+BEFORE UPDATE ON Library
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit (bid, bname, doi, status, action_type)
+    VALUES (OLD.bid, OLD.bname, OLD.doi, OLD.status, 'UPDATE');
+END;
+//
+
+-- Trigger: Before DELETE
+CREATE TRIGGER trg_audit_before_delete
+BEFORE DELETE ON Library
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit (bid, bname, doi, status, action_type)
+    VALUES (OLD.bid, OLD.bname, OLD.doi, OLD.status, 'DELETE');
+END;
+//
+
+-- Reset delimiter
+DELIMITER ;
+
+-- ✅ Test: Insert sample data
+INSERT INTO Library VALUES (101, 'C Programming', CURDATE() - INTERVAL 25 DAY, 'ISSUE');
+
+-- ✅ Test: Update record (will trigger audit)
+UPDATE Library SET status = 'RETURN' WHERE bid = 101;
+
+-- ✅ Test: Delete record (will trigger audit)
+DELETE FROM Library WHERE bid = 101;
+
+-- ✅ Check audit log
+SELECT * FROM Library_Audit;
+
+
+ 1. Theory (Detailed)
+🧾 Core Concepts Used
+🧱 Database Triggers
+Triggers are procedural code in SQL that are automatically executed before or after specific events (INSERT, UPDATE, DELETE) on a table. They help enforce rules, maintain logs, and ensure data integrity without requiring application-side logic.
+
+📋 Before Triggers
+The script uses BEFORE triggers:
+
+BEFORE UPDATE: Executes before a row is updated.
+
+BEFORE DELETE: Executes before a row is deleted.
+
+This ensures the original state of the record is captured before any changes occur, preserving true audit data.
+
+📑 Audit Table
+The Library_Audit table is used to:
+
+Store historical snapshots of book records.
+
+Record what kind of change occurred (UPDATE or DELETE).
+
+Track who modified what and when (via timestamp).
+
+This implements change tracking, essential for:
+
+Debugging and rollback scenarios.
+
+Accountability and security auditing.
+
+✅ 2. Why Our Solution Satisfies the Problem
+✅ Accurate Logging
+Changes to the Library table (updates or deletions) are automatically recorded before they happen.
+
+This ensures no information is lost when rows are deleted or overwritten.
+
+✅ Audit Trail
+Each entry in Library_Audit includes:
+
+Book details
+
+Type of action (UPDATE or DELETE)
+
+Exact timestamp (timestampofquery)
+
+This provides a complete historical record of all modifications made to the Library data.
+
+✅ Non-Invasive Monitoring
+Core table (Library) remains unchanged in structure or operation.
+
+Logging is automated and non-intrusive, improving system reliability and security.
+
+🔍 3. Code Working Explanation
+🔸 Library Table
+Holds book data:
+
+bid: Unique Book ID
+
+bname: Book Name
+
+doi: Date of Issue
+
+status: 'ISSUE' or 'RETURN'
+
+🔸 Library_Audit Table
+Captures audit logs:
+
+id: Auto-incremented log entry ID
+
+action_type: Either 'UPDATE' or 'DELETE'
+
+timestampofquery: Automatically logs time of the change
+
+🔸 Trigger 1: trg_audit_before_update
+When? Before a book record is updated.
+
+Logic:
+
+Captures the current (old) state of the book.
+
+Logs it to Library_Audit with action_type = 'UPDATE'.
+
+🔸 Trigger 2: trg_audit_before_delete
+When? Before a book is deleted.
+
+Logic:
+
+Captures the full record of the book that is about to be deleted.
+
+Logs it to Library_Audit with action_type = 'DELETE'.
+
+🧪 Test Execution
+sql
+Copy
+Edit
+-- Step 1: Insert book
+INSERT INTO Library VALUES (101, 'C Programming', CURDATE() - INTERVAL 25 DAY, 'ISSUE');
+
+-- Step 2: Update book status (triggers audit)
+UPDATE Library SET status = 'RETURN' WHERE bid = 101;
+
+-- Step 3: Delete book (triggers audit)
+DELETE FROM Library WHERE bid = 101;
+
+-- Step 4: View audit log
+SELECT * FROM Library_Audit;
+✅ Expected Output
+The Library_Audit table will contain two entries:
+
+An UPDATE entry capturing the state before changing status to 'RETURN'
+
+A DELETE entry capturing the state before the row was deleted
+
+
+

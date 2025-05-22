@@ -1,0 +1,194 @@
+
+db.sites.insertMany([
+    { url: "https://abc.com", dateofaccess: new Date("2025-05-01T10:00:00Z") },
+    { url: "https://abc.com", dateofaccess: new Date("2025-05-12T12:30:00Z") },
+    { url: "https://abc.com", dateofaccess: new Date("2025-06-03T14:20:00Z") },
+    { url: "https://xyz.com", dateofaccess: new Date("2025-05-10T09:15:00Z") },
+    { url: "https://xyz.com", dateofaccess: new Date("2025-06-11T16:45:00Z") },
+    { url: "https://xyz.com", dateofaccess: new Date("2025-06-12T17:00:00Z") },
+    { url: "https://xyz.com", dateofaccess: new Date("2025-06-13T18:10:00Z") }
+]);
+var mapFunction = function() {
+    var date = new Date(this.dateofaccess);
+    var month = (date.getMonth() + 1).toString().padStart(2, '0'); // "01".."12"
+    var year = date.getFullYear();
+    var key = this.url + "-" + year + "-" + month;  // Example: "https://abc.com-2025-05"
+    emit(key, 1);
+};
+
+var reduceFunction = function(key, values) {
+    return Array.sum(values);
+};
+
+db.sites.mapReduce(
+    mapFunction,
+    reduceFunction,
+    {
+        out: "site_access_per_month"
+    }
+);
+
+db.site_access_per_month.find().pretty();
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+Certainly! Let’s explore **key concepts** of the MongoDB **MapReduce operation** you've used, with a deep explanation of each part:
+
+---
+
+## 🔑 Key Concepts in Depth
+
+### 1. **What is MapReduce in MongoDB?**
+
+MapReduce is a **data processing paradigm** used for **large-scale aggregation** in MongoDB. It works by:
+
+* **Map Phase:** Extracting and transforming data.
+* **Reduce Phase:** Aggregating/translating the output from the map phase.
+
+> It is useful when you need **custom aggregation logic** that's hard to achieve with standard aggregation pipelines.
+
+---
+
+### 2. **Your Use Case: Counting Site Accesses Per Month Per URL**
+
+Let’s go step-by-step through your code:
+
+---
+
+## 🧱 Collection Setup
+
+### `db.sites.insertMany([...])`
+
+You inserted documents into the `sites` collection with:
+
+* `url`: the website accessed.
+* `dateofaccess`: the timestamp of the access.
+
+Sample document:
+
+```json
+{
+  "url": "https://abc.com",
+  "dateofaccess": ISODate("2025-05-01T10:00:00Z")
+}
+```
+
+---
+
+## 📍 Step 1: The Map Function
+
+```js
+var mapFunction = function() {
+    var date = new Date(this.dateofaccess);
+    var month = (date.getMonth() + 1).toString().padStart(2, '0'); // Convert 0–11 to 1–12
+    var year = date.getFullYear();
+    var key = this.url + "-" + year + "-" + month;  // Composite key: URL + Month-Year
+    emit(key, 1);
+};
+```
+
+### 🔍 Key Concepts in Map:
+
+* `this`: Refers to the current document in `sites`.
+* `emit(key, value)`: Core function of the map phase.
+
+  * `key`: Composite string like `"https://abc.com-2025-05"`
+  * `value`: Always `1`, indicating one access.
+
+➡️ Purpose: Break access data down by **URL and month** for aggregation.
+
+---
+
+## 🧮 Step 2: The Reduce Function
+
+```js
+var reduceFunction = function(key, values) {
+    return Array.sum(values);
+};
+```
+
+### 🔍 Key Concepts in Reduce:
+
+* `key`: The same key emitted by the map function.
+* `values`: An array of `1`s (one for each time that key occurred).
+* `Array.sum(values)`: Built-in MongoDB function to sum the array.
+
+➡️ Purpose: Count how many times each URL was accessed per month.
+
+---
+
+## 🗃 Step 3: Executing the MapReduce
+
+```js
+db.sites.mapReduce(
+    mapFunction,
+    reduceFunction,
+    {
+        out: "site_access_per_month"
+    }
+);
+```
+
+### 🔍 Key Concepts:
+
+* `mapFunction`: Called once per document to emit key-value pairs.
+* `reduceFunction`: Combines all values for the same key.
+* `out`: Specifies where to save the results:
+
+  * `out: "site_access_per_month"` creates or replaces this collection.
+
+---
+
+## 📤 Step 4: Viewing the Results
+
+```js
+db.site_access_per_month.find().pretty();
+```
+
+Each result document looks like:
+
+```json
+{
+  "_id": "https://abc.com-2025-05",
+  "value": 2
+}
+```
+
+### 🔍 Meaning:
+
+* `_id`: Grouped key — URL and month.
+* `value`: Number of times that site was accessed during that month.
+
+---
+
+## 🛑 Optional Concepts
+
+### ✅ Why Use MapReduce Over Aggregation?
+
+* **Flexible and programmable** — you can write JavaScript code in map/reduce.
+* Better suited for **complex custom aggregations**.
+
+However, MongoDB recommends **Aggregation Pipelines** for most modern use cases due to:
+
+* Better **performance**.
+* Native **support for more operators**.
+* Easier to read and maintain.
+
+---
+
+## 📌 Summary of Core Terms
+
+| Concept          | Purpose                                              |
+| ---------------- | ---------------------------------------------------- |
+| `map()`          | Emits key-value pairs for grouping.                  |
+| `reduce()`       | Combines values for the same key.                    |
+| `emit(key, val)` | Core function for mapping logic.                     |
+| `out`            | Defines the output collection.                       |
+| `Array.sum()`    | MongoDB helper to sum array values during reduction. |
+
+---
+
+If you want, I can also show how to achieve the **same result using Aggregation Pipelines**, which are more efficient and preferred in modern MongoDB applications.

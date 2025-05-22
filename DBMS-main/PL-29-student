@@ -1,0 +1,103 @@
+-- Step 1: Create the table
+CREATE TABLE student_course (
+    ROLL_NO INT,
+    COURSE VARCHAR(50),
+    COURSE_COD VARCHAR(10),
+    SEM INT,
+    TOTAL_MARKS INT,
+    PERCENTAGE DECIMAL(5,2)
+);
+
+-- Step 2: Insert sample data
+INSERT INTO student_course VALUES
+(1, 'BCA', 'CS101', 1, 800, 80.00),
+(2, 'BCA', 'CS101', 1, 720, 72.00),
+(3, 'BCA', 'CS101', 1, 680, 68.00),
+(4, 'BCA', 'CS101', 1, 610, 61.00),
+(5, 'BCA', 'CS101', 1, 540, 54.00),
+(6, 'BCA', 'CS101', 1, 480, 48.00),
+(7, 'BCA', 'CS101', 1, 450, 45.00),
+(8, 'BBA', 'MG101', 1, 750, 75.00),
+(9, 'BBA', 'MG101', 1, 620, 62.00),
+(10, 'BBA', 'MG101', 1, 510, 51.00),
+(11, 'BBA', 'MG101', 1, 470, 47.00);
+
+-- Step 3: Create the procedure
+DELIMITER $$
+
+CREATE PROCEDURE count_student_ranges(IN course_input VARCHAR(50))
+BEGIN
+    DECLARE r1 INT DEFAULT 0;  -- 70% to 100%
+    DECLARE r2 INT DEFAULT 0;  -- 60% to 69%
+    DECLARE r3 INT DEFAULT 0;  -- 50% to 59%
+    DECLARE r4 INT DEFAULT 0;  -- Below 50%
+
+    SELECT COUNT(*) INTO r1
+    FROM student_course
+    WHERE COURSE = course_input AND PERCENTAGE BETWEEN 70 AND 100;
+
+    SELECT COUNT(*) INTO r2
+    FROM student_course
+    WHERE COURSE = course_input AND PERCENTAGE BETWEEN 60 AND 69.99;
+
+    SELECT COUNT(*) INTO r3
+    FROM student_course
+    WHERE COURSE = course_input AND PERCENTAGE BETWEEN 50 AND 59.99;
+
+    SELECT COUNT(*) INTO r4
+    FROM student_course
+    WHERE COURSE = course_input AND PERCENTAGE < 50;
+
+    -- Output the result
+    SELECT 
+        CONCAT('70-100%: ', r1) AS range_1,
+        CONCAT('60-69%: ', r2) AS range_2,
+        CONCAT('50-59%: ', r3) AS range_3,
+        CONCAT('Below 50%: ', r4) AS range_4;
+END$$
+
+DELIMITER ;
+
+-- Step 4: Call the procedure for course 'BCA'
+CALL count_student_ranges('BCA');
+
+-- Step 5: Call the procedure for course 'BBA'
+CALL count_student_ranges('BBA');
+-----------------------------------------------------------------------------------------------------------------
+-- Create Table
+CREATE TABLE student_course (
+    roll_no INT PRIMARY KEY,
+    course VARCHAR(50),
+    course_cod VARCHAR(20),
+    sem INT,
+    total_marks INT,
+    percentage FLOAT
+);
+
+-- Insert Data
+INSERT INTO student_course VALUES 
+(101, 'math', 'MTH101', 2, 400, 85),
+(102, 'science', 'SCI102', 2, 400, 67),
+(103, 'history', 'HIS103', 2, 400, 55),
+(104, 'english', 'ENG104', 2, 400, 42);
+
+-- Create Stored Procedure
+DELIMITER //
+
+CREATE PROCEDURE count_students_by_course(IN course_name VARCHAR(50))
+BEGIN
+    SELECT course,
+        SUM(CASE WHEN percentage BETWEEN 70 AND 100 THEN 1 ELSE 0 END) AS high_range,
+        SUM(CASE WHEN percentage BETWEEN 60 AND 69 THEN 1 ELSE 0 END) AS mid_range,
+        SUM(CASE WHEN percentage BETWEEN 50 AND 59 THEN 1 ELSE 0 END) AS low_range,
+        SUM(CASE WHEN percentage < 50 THEN 1 ELSE 0 END) AS below_range
+    FROM student_course
+    WHERE course = course_name
+    GROUP BY course;
+END;
+//
+
+DELIMITER ;
+
+-- Call Procedure
+CALL count_students_by_course('math');

@@ -1,0 +1,192 @@
+-- Step 1: Create Tables
+CREATE TABLE borrower (
+    rollin INT PRIMARY KEY,
+    name VARCHAR(50),
+    dateofissue DATE,
+    nameofbook VARCHAR(100),
+    status CHAR(1)
+);
+
+CREATE TABLE fine (
+    roll_no INT,
+    date DATE,
+    amt INT,
+    FOREIGN KEY (roll_no) REFERENCES borrower(rollin)
+);
+
+-- Step 2: Insert Sample Data
+INSERT INTO borrower VALUES
+(101, 'rahul', '2024-04-01', 'introduction to sql', 'I'),
+(102, 'neha', '2024-03-20', 'database management', 'I'),
+(103, 'amit', '2024-03-10', 'programming in java', 'I'),
+(104, 'priya', '2024-04-05', 'web development essentials', 'I');
+
+DELIMITER //
+
+CREATE PROCEDURE process_fine(
+    IN user_roll INT,
+    IN user_book VARCHAR(100)
+)
+BEGIN
+    DECLARE issue_date DATE;
+    DECLARE days_late INT;
+    DECLARE fine_amount INT DEFAULT 0;
+    DECLARE book_status CHAR(1);
+
+    -- Check if such a record exists first
+    IF (SELECT COUNT(*) 
+        FROM borrower 
+        WHERE rollin = user_roll AND nameofbook = user_book) = 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'No record found for the given roll number and book name';
+    END IF;
+
+    -- Fetch the values
+    SELECT dateofissue, status INTO issue_date, book_status
+    FROM borrower 
+    WHERE rollin = user_roll AND nameofbook = user_book;
+
+    -- Calculate days late
+    SET days_late = DATEDIFF(CURDATE(), issue_date);
+
+    -- Fine calculation
+    IF days_late >= 15 AND days_late <= 30 THEN
+        SET fine_amount = days_late * 5;
+    ELSEIF days_late > 30 THEN
+        SET fine_amount = days_late * 50;
+    END IF;
+
+    -- Insert into fine table if applicable
+    IF fine_amount > 0 THEN
+        INSERT INTO fine (roll_no, date, amt)
+        VALUES (user_roll, CURDATE(), fine_amount);
+    END IF;
+
+    -- Update status to 'R'
+    UPDATE borrower 
+    SET status = 'R'
+    WHERE rollin = user_roll AND nameofbook = user_book;
+
+    -- Return result
+    SELECT user_roll AS roll_no, user_book AS book, fine_amount AS fine;
+END;
+//
+
+DELIMITER ;
+
+CALL process_fine(101, 'introduction to sql');
+
+----------------------------------------------------------------------------------
+-- Step 1: Create the employee_salary table
+CREATE TABLE employee_salary (
+    emp_no INT PRIMARY KEY,
+    basic INT,
+    hra INT,
+    da INT,
+    total_deduction INT,
+    net_salary INT,
+    gross_salary INT
+);
+
+-- Step 2: Insert sample data
+INSERT INTO employee_salary VALUES
+(101, 50000, 10000, 5000, 7000, 58000, 65000),
+(102, 60000, 12000, 6000, 8000, 70000, 78000),
+(103, 45000, 9000, 4500, 6500, 50000, 56500),
+(104, 70000, 14000, 7000, 10000, 87000, 97000);
+
+-- Step 3: Create the procedure
+DELIMITER //
+
+CREATE PROCEDURE calculate_tax()
+BEGIN
+    -- All DECLAREs must come first
+    DECLARE x INT DEFAULT 0;
+    DECLARE y INT DEFAULT 0;
+    DECLARE z INT DEFAULT 0;
+    DECLARE a INT DEFAULT 0;
+    DECLARE b INT DEFAULT 0;
+    DECLARE c INT DEFAULT 0;
+    DECLARE d INT DEFAULT 0;
+    DECLARE finished INT DEFAULT 0;
+    DECLARE tax INT;
+
+    -- Cursor and handler declarations
+    DECLARE cur CURSOR FOR 
+        SELECT emp_no, basic, hra, da, total_deduction, net_salary, gross_salary 
+        FROM employee_salary 
+        ORDER BY emp_no;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+
+    -- Create a temporary table to store results
+    CREATE TEMPORARY TABLE IF NOT EXISTS tax_result (
+        emp_no INT,
+        gross_salary INT,
+        tax INT
+    );
+
+    DELETE FROM tax_result;
+
+    OPEN cur;
+
+    emp_loop: LOOP
+        FETCH cur INTO x, y, z, a, b, c, d;
+        IF finished = 1 THEN 
+            LEAVE emp_loop;
+        END IF;
+
+        SET tax = d * 0.1;
+
+        INSERT INTO tax_result VALUES (x, d, tax);
+    END LOOP;
+
+    CLOSE cur;
+
+    -- Show the results
+    SELECT * FROM tax_result;
+END;
+//
+
+DELIMITER ;
+
+-- Step 4: Call the procedure
+CALL calculate_tax();
+---------------------------------------------------------------
+
+-- Step 1: Create the employee_salary table
+CREATE TABLE employee_salary (
+    emp_no INT PRIMARY KEY,
+    basic INT,
+    hra INT,
+    da INT,
+    total_deduction INT,
+    net_salary INT,
+    gross_salary INT
+);
+
+-- Step 2: Insert sample data
+INSERT INTO employee_salary VALUES
+(101, 50000, 10000, 5000, 7000, 58000, 65000),
+(102, 60000, 12000, 6000, 8000, 70000, 78000),
+(103, 45000, 9000, 4500, 6500, 50000, 56500),
+(104, 70000, 14000, 7000, 10000, 87000, 97000);
+
+-- Step 3: Create the stored procedure
+DELIMITER //
+
+CREATE PROCEDURE calculate_tax_simple()
+BEGIN
+    SELECT 
+        emp_no, 
+        gross_salary, 
+        gross_salary * 0.1 AS tax
+    FROM employee_salary;
+END;
+//
+
+DELIMITER ;
+
+-- Step 4: Call the procedure
+CALL calculate_tax_simple();
+

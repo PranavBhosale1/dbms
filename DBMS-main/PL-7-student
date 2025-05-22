@@ -1,0 +1,169 @@
+-- Student Table
+DROP TABLE IF EXISTS Result;
+DROP TABLE IF EXISTS Student;
+
+CREATE TABLE Student (
+    rollno INT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    Marks1 INT NOT NULL,
+    Marks2 INT NOT NULL,
+    Marks3 INT NOT NULL,
+    Marks4 INT NOT NULL,
+    Marks5 INT NOT NULL
+);
+
+-- Result Table
+CREATE TABLE Result (
+    rollno INT PRIMARY KEY,
+    total_marks INT NOT NULL,
+    class VARCHAR(20) NOT NULL,
+    FOREIGN KEY (rollno) REFERENCES Student(rollno)
+);
+
+-- Procedure to calculate class
+DELIMITER $$
+
+CREATE PROCEDURE CalculateStudentClass()
+BEGIN
+    DECLARE v_rollno INT;
+    DECLARE v_total_marks INT;
+    DECLARE v_class VARCHAR(20);
+    DECLARE done INT DEFAULT 0;
+
+    -- Cursor for Student records
+    DECLARE student_cursor CURSOR FOR
+    SELECT rollno, Marks1 + Marks2 + Marks3 + Marks4 + Marks5 AS total_marks
+    FROM Student;
+
+    -- Handler
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN student_cursor;
+
+    student_loop: LOOP
+        FETCH student_cursor INTO v_rollno, v_total_marks;
+        IF done = 1 THEN
+            LEAVE student_loop;
+        END IF;
+
+        -- Check valid marks
+        IF v_total_marks < 0 OR v_total_marks > 500 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Invalid marks: Must be between 0 and 100 per subject.';
+        END IF;
+
+        -- Class assignment
+        IF v_total_marks >= 400 THEN
+            SET v_class = 'Distinction';
+        ELSEIF v_total_marks >= 350 THEN
+            SET v_class = 'First Class';
+        ELSEIF v_total_marks >= 300 THEN
+            SET v_class = 'Higher Second';
+        ELSEIF v_total_marks >= 250 THEN
+            SET v_class = 'Second';
+        ELSE
+            SET v_class = 'Pass';
+        END IF;
+
+        -- Insert/update Result
+        INSERT INTO Result (rollno, total_marks, class)
+        VALUES (v_rollno, v_total_marks, v_class)
+        ON DUPLICATE KEY UPDATE total_marks = v_total_marks, class = v_class;
+    END LOOP;
+
+    CLOSE student_cursor;
+END$$
+
+DELIMITER ;
+
+-- Insert data
+INSERT INTO Student (rollno, name, Marks1, Marks2, Marks3, Marks4, Marks5)
+VALUES
+(1,'Alice',80,85,78,90,88),
+(2,'Bob',70,65,75,60,68),
+(3,'Charlie',50,55,45,40,50),
+(4,'David',98,95,92,96,89);
+
+-- Run procedure
+CALL CalculateStudentClass();
+
+-- View results
+SELECT * FROM Result;
+
+
+
+📚 Theory (Detailed)
+The provided code involves SQL and PL/SQL constructs for managing a student database, focusing on table creation, data insertion, and a stored procedure for processing student marks to determine their class based on total marks. Below are the key database concepts and operations involved:
+
+Table Creation and Constraints:
+CREATE TABLE: Used to define the structure of the Student and Result tables. The Student table stores student details (roll number, name, and marks for five subjects), while the Result table stores the calculated total marks and class.
+Constraints:
+PRIMARY KEY: Ensures rollno is unique in both tables, enforcing entity integrity.
+NOT NULL: Guarantees that critical fields (e.g., name, marks, total_marks, class) cannot be null, ensuring data completeness.
+FOREIGN KEY: Links the rollno in the Result table to the Student table, enforcing referential integrity to ensure only valid student records are referenced.
+Importance: These constraints maintain data integrity and prevent invalid data entries, which is critical in academic databases to ensure accurate student records.
+Stored Procedure (PL/SQL):
+A stored procedure (CalculateStudentClass) is a precompiled database program that encapsulates logic for calculating total marks and assigning a class based on predefined thresholds.
+Cursors: Used to iterate over the Student table records to compute total marks for each student. Cursors are essential for row-by-row processing in PL/SQL when set-based operations are insufficient.
+Exception Handling: The SIGNAL SQLSTATE construct is used to raise custom errors if total marks are invalid (e.g., negative or exceeding 500). Exception handling ensures robust error management, preventing incorrect data from being processed.
+Importance: Stored procedures improve modularity, reusability, and security by centralizing business logic. They are commonly used in academic systems to automate result processing.
+Data Manipulation:
+INSERT: Adds sample student data to the Student table.
+INSERT ... ON DUPLICATE KEY UPDATE: Inserts or updates records in the Result table based on the rollno primary key, ensuring no duplicate entries and updating existing records if needed.
+SELECT: Retrieves the final results from the Result table for display.
+Importance: These operations ensure data is correctly populated and retrieved, maintaining the database’s role as a reliable data store.
+Best Practices:
+Normalization: The database follows normalization principles by separating student data (Student table) and derived results (Result table), reducing redundancy.
+Indexing: The primary key on rollno implicitly creates an index, improving query performance for lookups and joins.
+Error Handling: Validating marks within the procedure ensures data quality.
+Use Case: This setup is typical in academic systems for managing student performance, calculating grades, and generating reports.
+✅ Why Our Solution Satisfies the Problem
+The solution effectively addresses the need to calculate and store student results based on their marks while maintaining data integrity and performance. Here’s how it satisfies the problem:
+
+Data Integrity:
+The PRIMARY KEY and FOREIGN KEY constraints ensure unique student records and valid references between tables, preventing orphaned records in the Result table.
+The NOT NULL constraints guarantee that essential fields (e.g., marks, name) are always populated, avoiding incomplete data.
+The stored procedure validates total marks (0–500 range), raising errors for invalid data, which ensures only valid results are stored.
+Performance:
+The use of a primary key on rollno ensures efficient lookups and updates in the Result table.
+The ON DUPLICATE KEY UPDATE clause minimizes redundant operations by updating existing records instead of failing on duplicates, optimizing performance for repeated executions.
+Logical Structure:
+The solution separates raw data (Student) from derived data (Result), adhering to normalization principles and making the database easier to maintain.
+The stored procedure encapsulates the logic for calculating total marks and assigning classes, ensuring consistency across all records.
+Validation and Functionality:
+The procedure uses conditional logic to assign classes based on total marks, meeting the requirement to categorize student performance (Distinction, First Class, etc.).
+The cursor-based approach ensures all student records are processed systematically, and the INSERT ... ON DUPLICATE KEY UPDATE handles both new and existing records, making the solution robust for dynamic datasets.
+🔍 Code Working Explanation
+The code performs the following steps to create, populate, and process a student database:
+
+Dropping Existing Tables:
+The code begins by removing any existing Result and Student tables to ensure a clean slate, preventing conflicts from previous runs.
+Creating the Student Table:
+A table named Student is created with columns for rollno (unique identifier), name, and five marks fields (Marks1 to Marks5). The rollno is set as the primary key, and all fields are marked NOT NULL to ensure completeness.
+Creating the Result Table:
+A table named Result is created to store each student’s rollno, total_marks, and class. The rollno is the primary key and a foreign key referencing the Student table, ensuring only valid students are recorded. All fields are NOT NULL.
+Defining the Stored Procedure:
+A stored procedure, CalculateStudentClass, is created to process student records.
+A cursor is declared to iterate over the Student table, calculating the sum of the five marks for each student.
+A handler is set to detect when no more records are available, allowing the loop to exit gracefully.
+For each student:
+The cursor fetches the rollno and the sum of marks.
+The total marks are validated to be between 0 and 500. If invalid, an error is raised, halting the process for that record.
+Based on the total marks, a class is assigned using conditional logic:
+≥400: Distinction
+≥350: First Class
+≥300: Higher Second
+≥250: Second
+<250: Pass
+The results (rollno, total_marks, class) are inserted into the Result table. If the rollno already exists, the record is updated with the new values.
+Inserting Sample Data:
+Four student records are added to the Student table with sample data for rollno, name, and marks for five subjects (e.g., Alice with marks 80, 85, 78, 90, 88).
+Executing the Procedure:
+The stored procedure is called, processing all student records and populating or updating the Result table with the calculated total marks and class for each student.
+Retrieving Results:
+A query retrieves all records from the Result table, displaying each student’s rollno, total_marks, and assigned class.
+Sample Data Assumptions:
+
+Each student has marks for five subjects, each out of 100, so the maximum total is 500.
+The sample data includes four students with varying marks to test different class categories (e.g., Alice likely gets Distinction, Bob gets Second, etc.).
+The Result table is initially empty and populated only by the procedure.

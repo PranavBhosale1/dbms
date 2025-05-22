@@ -1,0 +1,64 @@
+
+create table branch (
+    bname varchar(50) primary key,
+    city varchar(50)
+);
+
+create table customers (
+    cname varchar(50) primary key,
+    city varchar(50)
+);
+
+create table deposit (
+    actno int primary key,
+    cname varchar(50),
+    bname varchar(50),
+    amount decimal(12,2),
+    adate date,
+    foreign key (cname) references customers(cname),
+    foreign key (bname) references branch(bname)
+);
+
+create table borrow (
+    loanno int primary key,
+    cname varchar(50),
+    bname varchar(50),
+    amount decimal(12,2),
+    foreign key (cname) references customers(cname),
+    foreign key (bname) references branch(bname)
+);
+
+-- Insert Data
+insert into branch values
+('SBI', 'Mumbai'),
+('OBC', 'Nagpur'),
+('HDFC', 'Delhi');
+
+insert into customers values
+('Rahul', 'Mumbai'),
+('Aisha', 'Nagpur'),
+('ABC', 'Bombay'),
+('Suresh', 'Nagpur');
+
+insert into deposit values
+(101, 'Rahul', 'SBI', 5000, '2025-04-15'),
+(102, 'Aisha', 'OBC', 7000, '2025-03-20'),
+(103, 'ABC', 'HDFC', 8000, '2025-05-10');
+
+insert into borrow values
+(201, 'Rahul', 'SBI', 10000),
+(202, 'Aisha', 'OBC', 15000),
+(203, 'Suresh', 'OBC', 20000);
+
+-- Query 1: Display customer names having living city 'Bombay' and branch city 'Nagpur'
+select cname from customers 
+where city = 'Bombay' and cname in (select cname from deposit where bname in (select bname from branch where city = 'Nagpur'));
+
+-- Query 2: Display customer names having same living city as their branch city
+select cname from customers 
+where city in (select city from branch where bname in (select bname from deposit where deposit.cname = customers.cname));
+
+-- Query 3: Display customer names who are both borrowers and depositors and live in 'Nagpur'
+select distinct d.cname from deposit d 
+join borrow b on d.cname = b.cname 
+where d.cname in (select cname from customers where city = 'Nagpur');

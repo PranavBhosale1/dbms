@@ -1,0 +1,125 @@
+-- Create the database schema
+CREATE DATABASE IF NOT EXISTS banking_system;
+USE banking_system;
+
+-- Branch Table
+CREATE TABLE IF NOT EXISTS branch (
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50) NOT NULL,
+    assets DECIMAL(15,2) NOT NULL
+);
+
+-- Customer Table
+CREATE TABLE IF NOT EXISTS customer (
+    cust_name VARCHAR(50) PRIMARY KEY,
+    cust_street VARCHAR(100) NOT NULL,
+    cust_city VARCHAR(50) NOT NULL
+);
+
+-- Account Table
+CREATE TABLE IF NOT EXISTS Account (
+    Acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    balance DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (branch_name) REFERENCES branch(branch_name)
+);
+
+-- Depositor Table
+CREATE TABLE IF NOT EXISTS Depositor (
+    cust_name VARCHAR(50),
+    Acc_no INT,
+    PRIMARY KEY (cust_name, Acc_no),
+    FOREIGN KEY (cust_name) REFERENCES customer(cust_name),
+    FOREIGN KEY (Acc_no) REFERENCES Account(Acc_no)
+);
+
+-- Loan Table
+CREATE TABLE IF NOT EXISTS Loan (
+    loan_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (branch_name) REFERENCES branch(branch_name)
+);
+
+-- Borrower Table
+CREATE TABLE IF NOT EXISTS Borrower (
+    cust_name VARCHAR(50),
+    loan_no INT,
+    PRIMARY KEY (cust_name, loan_no),
+    FOREIGN KEY (cust_name) REFERENCES customer(cust_name),
+    FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+);
+
+-- Insert sample data into branch table
+INSERT INTO branch (branch_name, branch_city, assets) VALUES
+('Akurdi', 'Pune', 5000000.00),
+('Shivajinagar', 'Pune', 7500000.00),
+('MG Road', 'Mumbai', 10000000.00),
+('Andheri', 'Mumbai', 6000000.00),
+('Whitefield', 'Bangalore', 8000000.00);
+
+-- Insert sample data into customer table
+INSERT INTO customer (cust_name, cust_street, cust_city) VALUES
+('Rahul Sharma', '12 MG Road', 'Pune'),
+('Priya Patel', '45 Park Street', 'Mumbai'),
+('Amit Singh', '78 Gandhi Nagar', 'Bangalore'),
+('Neha Gupta', '23 Lake View', 'Pune'),
+('Sanjay Verma', '56 Hill Road', 'Mumbai');
+
+-- Insert sample data into Account table
+INSERT INTO Account (Acc_no, branch_name, balance) VALUES
+(1001, 'Akurdi', 25000.00),
+(1002, 'Shivajinagar', 50000.00),
+(1003, 'MG Road', 75000.00),
+(1004, 'Andheri', 30000.00),
+(1005, 'Whitefield', 60000.00),
+(1006, 'Akurdi', 40000.00),
+(1007, 'Shivajinagar', 35000.00);
+
+-- Insert sample data into Depositor table
+INSERT INTO Depositor (cust_name, Acc_no) VALUES
+('Rahul Sharma', 1001),
+('Priya Patel', 1002),
+('Amit Singh', 1003),
+('Neha Gupta', 1004),
+('Sanjay Verma', 1005),
+('Rahul Sharma', 1006),
+('Priya Patel', 1007);
+
+-- Insert sample data into Loan table
+INSERT INTO Loan (loan_no, branch_name, amount) VALUES
+(2001, 'Akurdi', 15000.00),
+(2002, 'Shivajinagar', 25000.00),
+(2003, 'MG Road', 30000.00),
+(2004, 'Andheri', 10000.00),
+(2005, 'Whitefield', 20000.00),
+(2006, 'Akurdi', 12500.00),
+(2007, 'Shivajinagar', 18000.00);
+
+-- Insert sample data into Borrower table
+INSERT INTO Borrower (cust_name, loan_no) VALUES
+('Rahul Sharma', 2001),
+('Priya Patel', 2002),
+('Amit Singh', 2003),
+('Neha Gupta', 2004),
+('Sanjay Verma', 2005),
+('Rahul Sharma', 2006),
+('Priya Patel', 2007);
+
+-- Execute the queries
+
+-- Query 1: Find names of all branches in loan relation
+SELECT DISTINCT branch_name FROM Loan;
+
+-- Query 2: Find loan numbers for loans made at Akurdi Branch with amount > 12000
+SELECT loan_no FROM Loan
+WHERE branch_name = 'Akurdi' AND amount > 12000;
+
+-- Query 3: Find all customers who have a loan from the bank
+SELECT DISTINCT cust_name FROM Borrower;
+
+-- Query 4: Find customer names, loan numbers, and loan amounts
+SELECT c.cust_name, b.loan_no, l.amount
+FROM customer c
+JOIN Borrower b ON c.cust_name = b.cust_name
+JOIN Loan l ON b.loan_no = l.loan_no;

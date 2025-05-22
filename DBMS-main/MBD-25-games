@@ -1,0 +1,64 @@
+
+db.createCollection("games");
+
+db.games.insertMany([
+  {
+    name: "Super Mario",
+    gametype: "Platformer",
+    score: 95,
+    achievements: ["Game Master", "Speed Demon"]
+  },
+  {
+    name: "The Legend of Zelda",
+    gametype: "Adventure",
+    score: 98,
+    achievements: ["Game Master", "Explorer"]
+  },
+  {
+    name: "Call of Duty",
+    gametype: "FPS",
+    score: 88,
+    achievements: ["Speed Demon", "Sharpshooter"]
+  },
+  {
+    name: "Fortnite",
+    gametype: "Battle Royale",
+    score: 92,
+    achievements: ["Builder", "Survivor"]
+  },
+  {
+    name: "Minecraft",
+    gametype: "Sandbox",
+    score: 97,
+    achievements: ["Game Master", "Builder"]
+  }
+]);
+db.games.find().pretty();
+
+db.games.find().sort({ score: -1 }).limit(3);
+db.games.find({
+  achievements: { $all: ["Game Master", "Speed Demon"] }
+});
+
+
+db.games.find({ score: { $gt: 90 } });
+
+db.games.find({ gametype: "Adventure" });
+
+db.games.countDocuments(); // More accurate than count()
+
+db.games.updateOne(
+  { name: "Fortnite" },
+  { $set: { score: 94 } }
+);
+
+db.games.deleteOne({ name: "Call of Duty" });
+
+db.games.createIndex({ score: -1 });
+
+db.games.createIndex({ gametype: 1, score: -1 });
+
+
+---
+
+Let me know if you’d like to extend this with **aggregation**, **pagination**, or **search with regex**!

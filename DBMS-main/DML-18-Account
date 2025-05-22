@@ -1,0 +1,69 @@
+Question 18: SQL DML Operations
+1. Create Tables
+sql
+Copy
+-- Account Table
+CREATE TABLE Account (
+    Acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    balance DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (branch_name) REFERENCES branch(branch_name)
+);
+
+-- Branch Table
+CREATE TABLE branch (
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50) NOT NULL,
+    assets DECIMAL(15,2) NOT NULL
+);
+
+-- Customer Table
+CREATE TABLE customer (
+    cust_name VARCHAR(50) PRIMARY KEY,
+    cust_street VARCHAR(100) NOT NULL,
+    cust_city VARCHAR(50) NOT NULL
+);
+
+-- Depositor Table
+CREATE TABLE Depositor (
+    cust_name VARCHAR(50),
+    Acc_no INT,
+    PRIMARY KEY (cust_name, Acc_no),
+    FOREIGN KEY (cust_name) REFERENCES customer(cust_name),
+    FOREIGN KEY (Acc_no) REFERENCES Account(Acc_no)
+);
+
+-- Loan Table
+CREATE TABLE Loan (
+    loan_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (branch_name) REFERENCES branch(branch_name)
+);
+
+-- Borrower Table
+CREATE TABLE Borrower (
+    cust_name VARCHAR(50),
+    loan_no INT,
+    PRIMARY KEY (cust_name, loan_no),
+    FOREIGN KEY (cust_name) REFERENCES customer(cust_name),
+    FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+);
+2. Solve Queries
+sql
+Copy
+-- Query 1: Find names of all branches in loan relation
+SELECT DISTINCT branch_name FROM Loan;
+
+-- Query 2: Find loan numbers for loans made at Akurdi Branch with amount > 12000
+SELECT loan_no FROM Loan
+WHERE branch_name = 'Akurdi' AND amount > 12000;
+
+-- Query 3: Find all customers who have a loan from the bank
+SELECT DISTINCT cust_name FROM Borrower;
+
+-- Query 4: Find customer names, loan numbers, and loan amounts
+SELECT c.cust_name, b.loan_no, l.amount
+FROM customer c
+JOIN Borrower b ON c.cust_name = b.cust_name
+JOIN Loan l ON b.loan_no = l.loan_no;

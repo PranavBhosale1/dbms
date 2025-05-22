@@ -1,0 +1,88 @@
+Got it! Here's a more **expanded set of MongoDB CRUD operations** with **additional entries** for the `Orders` collection.
+
+---
+
+### ✅ **Insert Multiple Orders (More Entries)**
+
+```js
+db.Orders.insertMany([
+  { cust_id: 107, amount: 1200, status: "Pending" },
+  { cust_id: 108, amount: 6500, status: "Delivered" },
+  { cust_id: 109, amount: 3400, status: "Shipped" },
+  { cust_id: 110, amount: 500, status: "Cancelled" },
+  { cust_id: 111, amount: 2000, status: "Delivered" },
+  { cust_id: 112, amount: 950, status: "Pending" },
+  { cust_id: 113, amount: 7600, status: "Shipped" },
+  { cust_id: 114, amount: 1800, status: "Confirmed" },
+  { cust_id: 115, amount: 2200, status: "Pending" },
+  { cust_id: 116, amount: 10000, status: "Delivered" }
+])
+```
+
+---
+
+### ✅ **Additional CRUD Operations**
+
+#### 🔸 Find orders where status is not "Cancelled"
+
+```js
+db.Orders.find({ status: { $ne: "Cancelled" } })
+```
+
+#### 🔸 Find orders between ₹2000 and ₹8000
+
+```js
+db.Orders.find({ amount: { $gte: 2000, $lte: 8000 } })
+```
+
+#### 🔸 Update status from "Pending" to "Processing"
+
+```js
+db.Orders.updateMany(
+  { status: "Pending" },
+  { $set: { status: "Processing" } }
+)
+```
+
+#### 🔸 Increase amount by ₹200 for all "Shipped" orders
+
+```js
+db.Orders.updateMany(
+  { status: "Shipped" },
+  { $inc: { amount: 200 } }
+)
+```
+
+#### 🔸 Find and project only `cust_id` and `amount` (hide `_id`)
+
+```js
+db.Orders.find({}, { cust_id: 1, amount: 1, _id: 0 })
+```
+
+#### 🔸 Delete all orders with amount > ₹9000
+
+```js
+db.Orders.deleteMany({ amount: { $gt: 9000 } })
+```
+
+#### 🔸 Sort all orders by amount (ascending)
+
+```js
+db.Orders.find().sort({ amount: 1 })
+```
+
+#### 🔸 Count number of orders by status
+
+```js
+db.Orders.aggregate([
+  { $group: { _id: "$status", count: { $sum: 1 } } }
+])
+```
+
+#### 🔸 Find top 3 highest value orders
+
+```js
+db.Orders.find().sort({ amount: -1 }).limit(3)
+```
+
+Let me know if you want to go into **pagination**, **filtering with regex**, or **admin-level commands** next!

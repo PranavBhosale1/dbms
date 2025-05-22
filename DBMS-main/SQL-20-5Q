@@ -1,0 +1,63 @@
+CREATE TABLE branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50)
+);
+
+CREATE TABLE customers (
+    cname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50)
+);
+
+CREATE TABLE deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(12,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES customers(cname),
+    FOREIGN KEY (bname) REFERENCES branch(bname)
+);
+
+CREATE TABLE borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(12,2),
+    FOREIGN KEY (cname) REFERENCES customers(cname),
+    FOREIGN KEY (bname) REFERENCES branch(bname)
+);
+
+INSERT INTO branch VALUES
+('SBI', 'Mumbai'),
+('OBC', 'Pune'),
+('HDFC', 'Delhi');
+
+INSERT INTO customers VALUES
+('Rahul', 'Mumbai'),
+('Aisha', 'Pune'),
+('ABC', 'Delhi');
+
+INSERT INTO deposit VALUES
+(101, 'Rahul', 'SBI', 5000, '2025-04-15'),
+(102, 'Aisha', 'OBC', 7000, '2025-03-20'),
+(103, 'ABC', 'HDFC', 8000, '2025-05-10');
+
+INSERT INTO borrow VALUES
+(201, 'Rahul', 'SBI', 10000),
+(202, 'Aisha', 'OBC', 15000),
+(203, 'ABC', 'HDFC', 20000);
+
+-- Query 1: Account date of customer "ABC"
+SELECT adate FROM deposit WHERE cname = 'ABC';
+
+-- Query 2: Modify the size of attribute amount in deposit table
+ALTER TABLE deposit MODIFY amount DECIMAL(15,2);
+
+-- Query 3: Display names of customers living in city Pune
+select  cname FROM customers WHERE city = 'Pune';
+
+-- Query 4: Display city of branch "OBC"
+SELECT city FROM branch WHERE bname = 'OBC';
+
+-- Query 5: Find the number of tuples (rows) in the customers table
+SELECT COUNT(*) AS total_customers FROM customers;

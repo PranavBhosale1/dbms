@@ -1,0 +1,175 @@
+-- 1. Create Tables
+
+-- Department table (created first to avoid FK conflict)
+CREATE TABLE Department (
+    DepartmentId INT PRIMARY KEY,
+    DepartmentName VARCHAR(50) NOT NULL,
+    ManagerId INT
+    -- ManagerId will reference EmployeeId after Employee table is created
+);
+
+-- Employee table
+CREATE TABLE Employee (
+    EmployeeId INT PRIMARY KEY,
+    EmployeeName VARCHAR(50) NOT NULL,
+    DepartmentId INT,
+    Salary DECIMAL(10,2) NOT NULL,
+    JoinDate DATE NOT NULL,
+    FOREIGN KEY (DepartmentId) REFERENCES Department(DepartmentId)
+);
+
+-- Add foreign key for ManagerId now (after Employee table is created)
+ALTER TABLE Department
+ADD CONSTRAINT FK_Manager
+FOREIGN KEY (ManagerId) REFERENCES Employee(EmployeeId);
+
+-- Project table
+CREATE TABLE Project (
+    ProjectId INT PRIMARY KEY,
+    ProjectName VARCHAR(50) NOT NULL,
+    StartDate DATE NOT NULL,
+    EndDate DATE
+);
+
+-- WorksOn table
+CREATE TABLE WorksOn (
+    EmployeeId INT,
+    ProjectId INT,
+    HoursWorked INT NOT NULL,
+    PRIMARY KEY (EmployeeId, ProjectId),
+    FOREIGN KEY (EmployeeId) REFERENCES Employee(EmployeeId),
+    FOREIGN KEY (ProjectId) REFERENCES Project(ProjectId)
+);
+
+-- 2. Create Views
+
+-- View 1: Employee with Department Info
+CREATE VIEW EmployeeDepartmentView AS
+SELECT e.EmployeeId, e.EmployeeName, d.DepartmentName, e.Salary
+FROM Employee e
+JOIN Department d ON e.DepartmentId = d.DepartmentId;
+
+-- View 2: Employees working on Projects
+CREATE VIEW ProjectEmployeeView AS
+SELECT p.ProjectId, p.ProjectName, e.EmployeeName, w.HoursWorked
+FROM Project p
+JOIN WorksOn w ON p.ProjectId = w.ProjectId
+JOIN Employee e ON w.EmployeeId = e.EmployeeId;
+
+-- 3. Create Index
+
+CREATE INDEX EmployeeId_Index
+ON Employee (DepartmentId ASC, EmployeeId ASC);
+
+-- 4. Create Sequence for EmployeeId
+
+CREATE SEQUENCE EmployeeId_Seq
+START WITH 101
+INCREMENT BY 1
+NOCACHE;
+
+📚 1. Theory (Detailed)
+🧱 Relational Database Structure
+This schema models a corporate structure using relational database principles, breaking down entities such as Department, Employee, and Project into separate tables with primary keys and foreign keys to maintain integrity and reduce redundancy.
+
+🔄 Foreign Key Relationships
+One-to-many relationship between Department and Employee via DepartmentId.
+
+Self-referencing foreign key in Department to track the ManagerId as an EmployeeId.
+
+Many-to-many relationship between Employee and Project managed through the junction table WorksOn.
+
+🧮 Views
+SQL VIEWs are virtual tables that store pre-defined SELECT queries, useful for:
+
+Encapsulating complex joins.
+
+Abstracting data access for reporting or security.
+
+Enhancing readability and usability.
+
+Two views are created:
+
+EmployeeDepartmentView: Combines employee and department data.
+
+ProjectEmployeeView: Shows project assignments with hours worked.
+
+🔍 Indexing
+Indexing improves query performance. An index on (DepartmentId, EmployeeId):
+
+Speeds up joins and WHERE clause lookups involving department.
+
+Ensures better execution plans for commonly filtered or grouped columns.
+
+🔢 Sequences
+A SEQUENCE generates unique IDs, typically used in Oracle or PostgreSQL databases. It supports auto-incrementing primary keys without manual input.
+
+✅ 2. Why Our Solution Satisfies the Problem
+✅ Logical Structure and Integrity
+Each table is normalized (mostly 3NF), ensuring no redundant data.
+
+Primary keys uniquely identify each record.
+
+Foreign keys maintain referential integrity between tables, enforcing consistency (e.g., only valid employees can be assigned to departments or projects).
+
+✅ View Usage
+EmployeeDepartmentView enables easy access to merged employee-department details—ideal for HR dashboards.
+
+ProjectEmployeeView offers an abstracted layer to query project involvement—suitable for project management tools.
+
+✅ Performance and Scalability
+The index on Employee optimizes join queries on DepartmentId, ensuring fast execution even with large datasets.
+
+The sequence allows scalable, automated ID generation without concurrency issues in multi-user environments.
+
+✅ Flexibility and Maintainability
+Self-referencing foreign key in Department allows modeling of managerial hierarchy within the same table.
+
+Separate WorksOn table enables tracking multiple employees per project and their individual hours—aligns with real-world business logic.
+
+🔍 3. Code Working Explanation
+🔸 Table Creation Order
+Department is created first to avoid FK conflicts.
+
+Employee follows, referencing DepartmentId.
+
+Then, the ALTER TABLE is used to add a foreign key constraint from ManagerId to EmployeeId, since Employee wasn't available at first.
+
+🔸 Project and WorksOn
+Project table stores project metadata.
+
+WorksOn is a junction table with a composite primary key (EmployeeId, ProjectId) to model the many-to-many relationship.
+
+It also records HoursWorked, which quantifies employee contribution.
+
+🔸 Views
+EmployeeDepartmentView:
+
+Joins Employee and Department on DepartmentId.
+
+Selects relevant columns to display the name, department, and salary info.
+
+ProjectEmployeeView:
+
+Joins Project, WorksOn, and Employee using ProjectId and EmployeeId.
+
+Displays project-wise employee involvement with hours worked.
+
+🔸 Index
+Created on Employee using (DepartmentId, EmployeeId) in ascending order.
+
+Optimizes performance for queries filtering or joining by department.
+
+🔸 Sequence
+EmployeeId_Seq auto-generates unique IDs starting from 101.
+
+NOCACHE disables pre-fetching values—ideal for deterministic ID generation during development.
+
+🧪 Assumed Data for Execution
+Employees have a DepartmentId assigned.
+
+Some departments have a manager (also an employee).
+
+Projects exist with assigned employees working certain hours
+
+

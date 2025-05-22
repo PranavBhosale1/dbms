@@ -1,0 +1,119 @@
+CREATE TABLE Borrower (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Rollin INT NOT NULL,
+    Name VARCHAR(100),
+    DateofIssue DATE,
+    NameofBook VARCHAR(100),
+    Status CHAR(1)  -- 'I' for Issued, 'R' for Returned
+);
+
+-- Insert sample data
+INSERT INTO Borrower (Rollin, Name, DateofIssue, NameofBook, Status) VALUES
+(101, 'Alice', '2025-05-01', 'Data Structures', 'I'),
+(102, 'Bob', '2025-05-05', 'Operating Systems', 'R'),
+(103, 'Charlie', '2025-05-03', 'Database Systems', 'I');
+CREATE VIEW IssuedBooks AS
+SELECT Rollin, Name, NameofBook, DateofIssue
+FROM Borrower
+WHERE Status = 'I';
+
+CREATE INDEX idx_rollin_book
+ON Borrower (Rollin, NameofBook);
+
+CREATE VIEW LibraryUsers AS
+SELECT * FROM Borrower;
+
+-- No ALTER TABLE needed here because ID column is already created as auto_increment primary key
+select * from Borrower;
+select * from IssuedBooks;
+
+
+
+Response for the Provided SQL Code (Borrower Database Implementation)
+Below is the detailed analysis of the provided SQL code for the Borrower database, formatted with Theory, Why Our Solution Satisfies the Problem, and Code Working Explanation. The code demonstrates the use of SQL objects (Table, View, Index, Synonym) for the Borrower schema, with sample data insertion and queries.
+
+Borrower Database SQL Implementation
+sql
+Show inline
+📚 Theory (Detailed)
+The provided SQL code implements a Borrower database for a library system, utilizing SQL objects such as tables, views, indexes, and sample data operations. Below are the key database concepts, their importance, and best practices:
+
+Table Creation and Constraints:
+CREATE TABLE: Defines the Borrower table with columns ID (auto-incrementing primary key), Rollin (borrower ID), Name, DateofIssue, NameofBook, and Status ('I' for Issued, 'R' for Returned).
+Constraints:
+PRIMARY KEY: The ID column ensures each record is uniquely identifiable.
+AUTO_INCREMENT: Automatically generates sequential values for ID, simplifying record creation.
+**NOT NULL роботі: Ensures Rollin is mandatory, maintaining data completeness.
+Importance: Tables store the core data of a database, and constraints enforce data integrity. The primary key and NOT NULL constraints prevent duplicate or incomplete records, critical for tracking library loans.
+Best Practices: Using AUTO_INCREMENT for ID avoids manual key management, and the NOT NULL constraint on Rollin ensures valid borrower identification.
+Views:
+Two views are created: IssuedBooks (shows borrowers with issued books) and LibraryUsers (displays all borrower records).
+Importance: Views simplify complex queries, enhance security by limiting data exposure, and provide user-friendly data representations. They are widely used in library systems for reporting (e.g., listing active loans).
+Best Practices: The IssuedBooks view filters for Status = 'I', making it efficient for specific queries, while LibraryUsers provides a complete view of the table for general use.
+Indexes:
+An index (idx_rollin_book) is created on Rollin and NameofBook to optimize queries.
+Importance: Indexes improve query performance for filtering and sorting, especially on frequently queried columns like borrower ID and book name in library systems.
+Best Practices: The composite index on Rollin and NameofBook supports queries involving both columns, aligning with typical library search patterns.
+Sequences:
+The AUTO_INCREMENT attribute on the ID column acts as a sequence, generating unique identifiers.
+Importance: Sequences ensure unique, sequential IDs for records, simplifying data management in tables with frequent insertions.
+Best Practices: The AUTO_INCREMENT setting is efficient and prevents ID conflicts without requiring a separate sequence object.
+Synonyms:
+Note: The provided code does not include a synonym, despite the requirement mentioning it. A synonym could be created as an alias for the Borrower table (e.g., CREATE SYNONYM LibraryLoans FOR Borrower;).
+Importance: Synonyms provide alternative names for database objects, improving usability and abstraction in complex systems.
+Best Practices: Synonyms should use intuitive names (e.g., LibraryLoans for Borrower) to enhance clarity.
+Data Manipulation:
+INSERT: Adds sample data to the Borrower table.
+SELECT: Retrieves data from the Borrower table and IssuedBooks view.
+Importance: These operations populate and query the database, enabling practical use cases like tracking loans.
+Best Practices: The sample data includes varied statuses ('I' and 'R') to test the views and queries effectively.
+✅ Why Our Solution Satisfies the Problem
+The solution effectively demonstrates the use of SQL objects (Table, View, Index, Sequence) for the Borrower schema, meeting the requirements with robust data management:
+
+Data Integrity:
+The PRIMARY KEY on ID and NOT NULL on Rollin ensure unique and complete records, preventing duplicate or invalid borrower entries.
+The AUTO_INCREMENT attribute guarantees unique IDs without manual intervention, maintaining consistency.
+Performance:
+The idx_rollin_book index optimizes queries filtering by Rollin or NameofBook, which are common in library systems (e.g., finding a borrower’s loans).
+The views reduce query complexity by predefining common data selections, improving performance for frequent operations.
+Logical Structure:
+The Borrower table is normalized, storing essential loan details (borrower ID, name, book, issue date, status) in a single table, suitable for a simple library system.
+The IssuedBooks view filters active loans, while LibraryUsers provides a complete dataset, addressing different use cases.
+The absence of a synonym (despite the requirement) is a minor oversight, but the solution remains functional without it.
+Validation and Functionality:
+The table structure supports the required schema (Rollin, Name, DateofIssue, NameofBook, Status).
+The IssuedBooks view correctly displays only issued books, meeting the need for targeted data views.
+The index supports efficient querying, and the sequence (AUTO_INCREMENT) ensures scalable ID generation.
+Sample queries validate the functionality by displaying all borrower records and issued books.
+🔍 Code Working Explanation
+The code implements a Borrower database with SQL objects and sample operations. Below is a step-by-step explanation of its functionality:
+
+Table Creation:
+The Borrower table is created with:
+ID: Auto-incrementing primary key for unique record identification.
+Rollin: Mandatory borrower ID.
+Name, DateofIssue, NameofBook: Optional fields for borrower details, issue date, and book title.
+Status: A single character indicating 'I' (Issued) or 'R' (Returned).
+The AUTO_INCREMENT attribute ensures each new record gets a unique ID.
+Sample Data Insertion:
+Three records are inserted into the Borrower table:
+Borrower 101 (Alice, issued “Data Structures” on 2025-05-01, status 'I').
+Borrower 102 (Bob, issued “Operating Systems” on 2025-05-05, status 'R').
+Borrower 103 (Charlie, issued “Database Systems” on 2025-05-03, status 'I').
+The ID values are automatically generated (1, 2, 3).
+View Creation:
+IssuedBooks: Selects Rollin, Name, NameofBook, and DateofIssue from Borrower where Status = 'I', showing only active loans.
+LibraryUsers: Selects all columns from Borrower, providing a complete view of the table.
+Index Creation:
+A composite index (idx_rollin_book) is created on Rollin and NameofBook, enhancing query performance for searches involving these columns.
+Data Retrieval:
+A query retrieves all records from the Borrower table, displaying the full dataset.
+A query retrieves records from the IssuedBooks view, showing only borrowers with issued books (e.g., Alice and Charlie).
+Sample Data Assumptions:
+
+The sample data includes three borrowers with recent issue dates (May 2025) to reflect active library operations.
+The Status values ('I' and 'R') test the IssuedBooks view’s filtering logic.
+The current date (May 21, 2025) is not used in the code but is relevant for interpreting DateofIssue.
+Note on Synonym:
+
+The code lacks a synonym, which could have been included (e.g., CREATE SYNONYM LibraryLoans FOR Borrower;) to provide an alias for the Borrower table. This omission does not affect functionality but misses one of the required SQL objects.
