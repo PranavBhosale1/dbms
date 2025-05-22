@@ -1,0 +1,636 @@
+﻿5 Create a collection sites(url,dateofaccess). Write a MapReduce function to find the no. of times a site was accessed in a month.
+db.sites.insertMany([
+  { url: "https://example.com", dateofaccess: new Date("2025-05-01") },
+  { url: "https://example.com", dateofaccess: new Date("2025-05-15") },
+  { url: "https://example.com", dateofaccess: new Date("2025-06-05") },
+  { url: "https://test.com", dateofaccess: new Date("2025-05-20") },
+  { url: "https://test.com", dateofaccess: new Date("2025-05-25") },
+  { url: "https://test.com", dateofaccess: new Date("2025-06-01") }
+])
+
+
+var mapFunction = function () {
+  var date = new Date(this.dateofaccess);
+  var yearMonth = date.getFullYear() + "-" + (date.getMonth() + 1); // e.g., "2025-5"
+  emit({ url: this.url, month: yearMonth }, 1);
+};
+
+
+var reduceFunction = function (key, values) {
+  return Array.sum(values);
+};
+
+
+db.sites.mapReduce(
+  mapFunction,
+  reduceFunction,
+  {
+    out: "site_access_per_month"
+  }
+);
+
+
+db.site_access_per_month.find().pretty();
+
+
+
+
+ 
+12 Implement Indexing and querying with MongoDB using following example.
+ 
+                            Students(stud_id, stud_name,stud_addr,stud_marks)
+
+
+use CollegeDB
+
+
+db.Students.insertMany([
+  { stud_id: 1, stud_name: "Alice", stud_addr: "Pune", stud_marks: 85 },
+  { stud_id: 2, stud_name: "Bob", stud_addr: "Mumbai", stud_marks: 78 },
+  { stud_id: 3, stud_name: "Charlie", stud_addr: "Delhi", stud_marks: 92 },
+  { stud_id: 4, stud_name: "David", stud_addr: "Pune", stud_marks: 88 },
+  { stud_id: 5, stud_name: "Eva", stud_addr: "Chennai", stud_marks: 65 }
+])
+
+
+db.Students.createIndex({ stud_name: 1 })
+
+
+db.Students.createIndex({ stud_addr: 1, stud_marks: -1 })
+
+
+db.Students.getIndexes()
+
+
+db.Students.find({ stud_addr: "Pune" })
+
+
+db.Students.find({ stud_marks: { $gt: 80 } })
+
+
+db.Students.find({ stud_addr: "Pune", stud_marks: { $gt: 80 } })
+
+
+db.Students.find({ stud_addr: "Pune", stud_marks: { $gt: 80 } }).explain("executionStats")
+
+
+db.Students.dropIndex("stud_name_1")  // Drop by index name
+
+
+
+
+ 
+16 Implement Map reduce operation with following example using MongoDB
+Students(stud_id, stud_name,stud_addr,stud_marks)
+ 
+AND
+Write a PL/SQL code to calculate total and percentage of marks of the students in four subjects.
+ 
+db.Students.insertMany([
+  { stud_id: 1, stud_name: "Alice", stud_addr: "Pune", stud_marks: 82 },
+  { stud_id: 2, stud_name: "Bob", stud_addr: "Mumbai", stud_marks: 75 },
+  { stud_id: 3, stud_name: "Charlie", stud_addr: "Pune", stud_marks: 91 },
+  { stud_id: 4, stud_name: "David", stud_addr: "Mumbai", stud_marks: 85 },
+  { stud_id: 5, stud_name: "Eve", stud_addr: "Delhi", stud_marks: 88 }
+]);
+
+
+var mapFunction = function() {
+  emit(this.stud_addr, this.stud_marks);
+};
+
+
+var reduceFunction = function(key, values) {
+  var total = Array.sum(values);
+  return { total: total, avg: total / values.length };
+};
+
+
+db.Students.mapReduce(
+  mapFunction,
+  reduceFunction,
+  {
+    out: "avg_marks_by_city"
+  }
+)
+
+
+db.avg_marks_by_city.find().pretty()
+
+
+
+
+
+
+CREATE TABLE Student (
+    rollno INT PRIMARY KEY,
+    name VARCHAR(100),
+    marks1 INT,
+    marks2 INT,
+    marks3 INT,
+    marks4 INT
+);
+
+
+CREATE TABLE Student_Result (
+    rollno INT PRIMARY KEY,
+    total INT,
+    percentage DECIMAL(5,2)
+);
+
+
+
+
+
+
+INSERT INTO Student VALUES (1, 'Amit', 85, 90, 78, 92);
+INSERT INTO Student VALUES (2, 'Sneha', 65, 70, 68, 72);
+INSERT INTO Student VALUES (3, 'Ravi', 55, 48, 60, 50);
+
+
+
+
+DELIMITER $$
+
+
+CREATE PROCEDURE CalcTotalPercentage()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE v_rollno INT;
+    DECLARE v_m1 INT;
+    DECLARE v_m2 INT;
+    DECLARE v_m3 INT;
+    DECLARE v_m4 INT;
+    DECLARE v_total INT;
+    DECLARE v_percent DECIMAL(5,2);
+
+
+    DECLARE cur CURSOR FOR 
+        SELECT rollno, marks1, marks2, marks3, marks4 FROM Student;
+
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+
+    OPEN cur;
+
+
+    read_loop: LOOP
+        FETCH cur INTO v_rollno, v_m1, v_m2, v_m3, v_m4;
+
+
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+
+        IF v_m1 < 0 OR v_m2 < 0 OR v_m3 < 0 OR v_m4 < 0 OR 
+           v_m1 > 100 OR v_m2 > 100 OR v_m3 > 100 OR v_m4 > 100 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Marks must be between 0 and 100';
+        END IF;
+
+
+        SET v_total = v_m1 + v_m2 + v_m3 + v_m4;
+        SET v_percent = (v_total / 400.0) * 100;
+
+
+        INSERT INTO Student_Result (rollno, total, percentage)
+        VALUES (v_rollno, v_total, v_percent);
+    END LOOP;
+
+
+    CLOSE cur;
+END$$
+
+
+DELIMITER ;
+
+
+CALL CalcTotalPercentage();
+
+
+SELECT * FROM Student_Result;
+
+
+
+
+17 Create  following collection and  using MongoDB  implement all CRUD operations.
+                            Orders( cust_id, amount, status)
+use myShopDB   // switch to your database or create if it doesn’t exist
+
+
+db.createCollection("Orders")  // create the collection
+
+
+// Insert single document
+db.Orders.insertOne({ cust_id: 101, amount: 500, status: "Pending" })
+
+
+// Insert multiple documents
+db.Orders.insertMany([
+  { cust_id: 102, amount: 1000, status: "Shipped" },
+  { cust_id: 103, amount: 750, status: "Cancelled" },
+  { cust_id: 104, amount: 1250, status: "Delivered" }
+])
+
+
+// Read all documents
+db.Orders.find()
+
+
+// Read with condition
+db.Orders.find({ status: "Shipped" })
+
+
+// Find by customer ID
+db.Orders.find({ cust_id: 102 })
+
+
+// Pretty output
+db.Orders.find().pretty()
+
+
+// Update one document
+db.Orders.updateOne(
+  { cust_id: 101 },
+  { $set: { status: "Delivered" } }
+)
+
+
+// Update multiple documents
+db.Orders.updateMany(
+  { status: "Pending" },
+  { $set: { status: "Processing" } }
+)
+
+
+// Delete one document
+db.Orders.deleteOne({ cust_id: 103 })
+
+
+// Delete all documents with status "Cancelled"
+db.Orders.deleteMany({ status: "Cancelled" })
+
+
+// Orders with amount > 800
+db.Orders.find({ amount: { $gt: 800 } })
+
+
+// Orders not delivered
+db.Orders.find({ status: { $ne: "Delivered" } })
+
+
+db.Orders.find().pretty()
+
+
+
+
+23  Implement all Aggregation operations and types of indexing with following collection using MongoDB.
+Employee(emp_id, emp_name,emp_dept,salary)
+use companyDB
+
+
+db.Employee.insertMany([
+  { emp_id: 1, emp_name: "Alice", emp_dept: "HR", salary: 50000 },
+  { emp_id: 2, emp_name: "Bob", emp_dept: "IT", salary: 70000 },
+  { emp_id: 3, emp_name: "Charlie", emp_dept: "HR", salary: 55000 },
+  { emp_id: 4, emp_name: "David", emp_dept: "Sales", salary: 60000 },
+  { emp_id: 5, emp_name: "Eva", emp_dept: "IT", salary: 72000 },
+  { emp_id: 6, emp_name: "Frank", emp_dept: "Sales", salary: 58000 }
+])
+
+
+db.Employee.aggregate([
+  {
+    $group: {
+      _id: null,
+      totalSalary: { $sum: "$salary" }
+    }
+  }
+])
+
+
+db.Employee.aggregate([
+  {
+    $group: {
+      _id: "$emp_dept",
+      avgSalary: { $avg: "$salary" }
+    }
+  }
+])
+
+
+db.Employee.aggregate([
+  {
+    $group: {
+      _id: null,
+      minSalary: { $min: "$salary" },
+      maxSalary: { $max: "$salary" }
+    }
+  }
+])
+
+
+db.Employee.aggregate([
+  {
+    $group: {
+      _id: "$emp_dept",
+      totalEmployees: { $sum: 1 }
+    }
+  }
+])
+
+
+db.Employee.aggregate([
+  { $sort: { salary: -1 } }
+])
+
+
+db.Employee.aggregate([
+  {
+    $project: {
+      _id: 0,
+      emp_name: 1,
+      emp_dept: 1,
+      salary: 1
+    }
+  }
+])
+
+
+db.Employee.createIndex({ emp_dept: 1 })
+
+
+db.Employee.createIndex({ emp_dept: 1, salary: -1 })
+
+
+db.Employee.createIndex({ emp_id: 1 }, { unique: true })
+
+
+db.Employee.createIndex({ emp_name: "text" })
+
+
+db.Employee.find({ $text: { $search: "Alice" } })
+
+
+
+
+
+
+25  Design and Implement any 5 query using MongoDB
+1.               Create a collection called ‘games’.
+2.               Add 5 games to the database. Give each document the following properties: name, gametype, score (out of 100), achievements
+3.               Write a query that returns all the games
+4.               Write a query that returns the 3 highest scored games.
+5.               Write a query that returns all the games that have both the ‘Game Maser’ and
+the ‘Speed Demon’ achievements.
+use gameDB;
+
+
+db.createCollection("games");
+
+
+db.games.insertMany([
+  {
+    name: "Shadow Strike",
+    gametype: "Action",
+    score: 88,
+    achievements: ["Game Master", "Speed Demon"]
+  },
+  {
+    name: "Puzzle World",
+    gametype: "Puzzle",
+    score: 92,
+    achievements: ["Brainiac", "Speed Demon"]
+  },
+  {
+    name: "Speed Racer",
+    gametype: "Racing",
+    score: 95,
+    achievements: ["Speed Demon", "Nitro Boost"]
+  },
+  {
+    name: "Battle Royale",
+    gametype: "Shooter",
+    score: 85,
+    achievements: ["Game Master", "Sharpshooter"]
+  },
+  {
+    name: "Mind Maze",
+    gametype: "Strategy",
+    score: 98,
+    achievements: ["Game Master", "Speed Demon"]
+  }
+]);
+
+
+db.games.find();
+
+
+db.games.find().sort({ score: -1 }).limit(3);
+
+
+db.games.find({
+  achievements: { $all: ["Game Master", "Speed Demon"] }
+});
+
+
+
+
+31.Create database  :Citydetails(_id,name,area,population(total,Adults,seniorcitizens,sexratio), geography(avgtemp, avgrainfall, longitude, latitude))
+ 
+1. Find the total population in pune.
+2.  returns all city with total population greater than 10 million
+3. returns the average populations for each city.
+4.  returns the minimum and maximum cities by population for each city.
+
+
+db.createCollection("Citydetails")
+
+
+db.Citydetails.insertMany([
+  {
+    _id: 1,
+    name: "Pune",
+    area: 450,
+    population: {
+      total: 9500000,
+      Adults: 6500000,
+      seniorcitizens: 1200000,
+      sexratio: 920
+    },
+    geography: {
+      avgtemp: 24,
+      avgrainfall: 850,
+      longitude: 73.8567,
+      latitude: 18.5204
+    }
+  },
+  {
+    _id: 2,
+    name: "Mumbai",
+    area: 603,
+    population: {
+      total: 20400000,
+      Adults: 15000000,
+      seniorcitizens: 3000000,
+      sexratio: 940
+    },
+    geography: {
+      avgtemp: 27,
+      avgrainfall: 2100,
+      longitude: 72.8777,
+      latitude: 19.0760
+    }
+  },
+  {
+    _id: 3,
+    name: "Nagpur",
+    area: 400,
+    population: {
+      total: 2900000,
+      Adults: 2000000,
+      seniorcitizens: 500000,
+      sexratio: 925
+    },
+    geography: {
+      avgtemp: 28,
+      avgrainfall: 1100,
+      longitude: 79.0882,
+      latitude: 21.1458
+    }
+  }
+])
+
+
+db.Citydetails.find(
+  { name: "Pune" },
+  { "population.total": 1, _id: 0 }
+)
+
+
+db.Citydetails.find(
+  { "population.total": { $gt: 10000000 } },
+  { name: 1, "population.total": 1, _id: 0 }
+)
+
+
+db.Citydetails.aggregate([
+  {
+    $project: {
+      name: 1,
+      averagePopulation: {
+        $avg: [
+          "$population.Adults",
+          "$population.seniorcitizens",
+          { $subtract: ["$population.total", { $add: ["$population.Adults", "$population.seniorcitizens"] }] }
+        ]
+      }
+    }
+  }
+])
+
+
+// MAX population city
+db.Citydetails.find().sort({ "population.total": -1 }).limit(1)
+
+
+// MIN population city
+db.Citydetails.find().sort({ "population.total": 1 }).limit(1)
+
+
+
+
+32.Create database  :Citydetails(_id,name,area,population(total,Adults,seniorcitizens,sexratio), geography (avgtemp, avgrainfall, longitude, latitude))
+ 
+ 
+1.               Find area wise total population and sort them in increasing order.
+2.               Retrieve name and area where average rain fall is greater than 60
+3.               Create index on city and area find the max population in Mumbai
+4.               Create index on name.
+
+
+db.Citydetails.insertMany([
+  {
+    _id: 1,
+    name: "Pune",
+    area: 450,
+    population: {
+      total: 9500000,
+      Adults: 6500000,
+      seniorcitizens: 1200000,
+      sexratio: 920
+    },
+    geography: {
+      avgtemp: 24,
+      avgrainfall: 850,
+      longitude: 73.8567,
+      latitude: 18.5204
+    }
+  },
+  {
+    _id: 2,
+    name: "Mumbai",
+    area: 603,
+    population: {
+      total: 20400000,
+      Adults: 15000000,
+      seniorcitizens: 3000000,
+      sexratio: 940
+    },
+    geography: {
+      avgtemp: 27,
+      avgrainfall: 2100,
+      longitude: 72.8777,
+      latitude: 19.0760
+    }
+  },
+  {
+    _id: 3,
+    name: "Nagpur",
+    area: 400,
+    population: {
+      total: 2900000,
+      Adults: 2000000,
+      seniorcitizens: 500000,
+      sexratio: 925
+    },
+    geography: {
+      avgtemp: 28,
+      avgrainfall: 1100,
+      longitude: 79.0882,
+      latitude: 21.1458
+    }
+  }
+])
+
+
+db.Citydetails.aggregate([
+  {
+    $project: {
+      area: 1,
+      total_population: "$population.total"
+    }
+  },
+  {
+    $sort: { area: 1 }
+  }
+])
+
+
+db.Citydetails.find(
+  { "geography.avgrainfall": { $gt: 60 } },
+  { name: 1, area: 1, _id: 0 }
+)
+
+
+// Create compound index on name and area
+db.Citydetails.createIndex({ name: 1, area: 1 })
+
+
+// Find max population in Mumbai (sort descending by population.total and limit 1)
+db.Citydetails.find({ name: "Mumbai" }).sort({ "population.total": -1 }).limit(1)
+
+
+db.Citydetails.createIndex({ name: 1 })
