@@ -1,0 +1,105 @@
+32 MongoDB City Indexing Queries.txt
+
+Question:
+Create database: Citydetails(_id,name,area,population(total,Adults,seniorcitizens,sexratio), geography(avgtemp, avgrainfall, longitude, latitude))
+Write queries to:
+1. Find area-wise total population and sort in increasing order.
+2. Retrieve name and area where average rainfall > 60
+3. Create index on city and area, find max population in Mumbai
+4. Create index on name
+
+Theory:
+MongoDB supports compound and single-field indexes. Aggregations and projections enhance querying efficiency.
+
+Why Our Solution Satisfies the Problem:
+- We create appropriate indexes.
+- We apply filtering and sorting efficiently.
+
+MongoDB Code:
+use india;
+
+-- Create indexes
+db.Citydetails.createIndex({ name: 1 });
+db.Citydetails.createIndex({ name: 1, area: 1 });
+
+-- Area-wise total population sorted
+db.Citydetails.aggregate([
+    { $project: { name: 1, area: 1, "population.total": 1 } },
+    { $sort: { area: 1 } }
+]);
+
+-- Cities with avg rainfall > 60
+db.Citydetails.find({ "geography.avgrainfall": { $gt: 60 } }, { name: 1, area: 1 });
+
+-- Max population in Mumbai
+db.Citydetails.find({ name: "Mumbai" }).sort({ "population.total": -1 }).limit(1);
+
+Syntax Used
+Database Selection:
+Syntax: use <database_name>
+Example: use india
+Purpose: Switches to the specified database (india). If the database doesn’t exist, MongoDB creates it when data is first inserted.
+Index Creation:
+Syntax: db.collection.createIndex({ <field1>: <1 or -1>, <field2>: <1 or -1> })
+Examples:
+db.Citydetails.createIndex({ name: 1 }): Creates a single-field index on name in ascending order.
+db.Citydetails.createIndex({ name: 1, area: 1 }): Creates a compound index on name and area, both in ascending order.
+Purpose: Indexes improve query performance by allowing efficient filtering and sorting. 1 indicates ascending order, -1 would indicate descending.
+Aggregation Pipeline (Query 1):
+Syntax: db.collection.aggregate([ { $stage1 }, { $stage2 }, ... ])
+Example:
+javascript
+
+Copy
+db.Citydetails.aggregate([
+    { $project: { name: 1, area: 1, "population.total": 1, _id: 0 } },
+    { $sort: { area: 1 } }
+])
+Stages:
+$project: Selects specific fields to include (1) or exclude (0). Dot notation (population.total) accesses nested fields.
+$sort: Orders documents by the specified field (area: 1 for ascending).
+Purpose: Retrieves name, area, and population.total, sorted by area.
+Find Query (Query 2):
+Syntax: db.collection.find({ <query> }, { <projection> })
+Example:
+javascript
+
+Copy
+db.Citydetails.find(
+    { "geography.avgrainfall": { $gt: 60 } },
+    { name: 1, area: 1, _id: 0 }
+)
+Components:
+Query: "geography.avgrainfall": { $gt: 60 } filters documents where avgrainfall exceeds 60, using $gt (greater than) operator.
+Projection: Specifies fields to include (name: 1, area: 1) or exclude (_id: 0).
+Purpose: Retrieves name and area for cities with high rainfall.
+Find with Sort and Limit (Query 3):
+Syntax: db.collection.find({ <query> }, { <projection> }).sort({ <field>: <1 or -1> }).limit(<number>)
+Example:
+javascript
+
+Copy
+db.Citydetails.find(
+    { name: "Mumbai" },
+    { name: 1, "population.total": 1, _id: 0 }
+).sort({ "population.total": -1 }).limit(1)
+Components:
+Query: Filters for documents where name is "Mumbai".
+Projection: Includes name and population.total, excludes _id.
+sort: Orders by population.total in descending order (-1).
+limit(1): Returns only the top result (highest population).
+Purpose: Finds the document with the maximum population for Mumbai.
+Explanation of Logic
+Database and Collection Setup: The use india command ensures all operations occur in the india database. The Citydetails collection is assumed to exist or is created upon data insertion. A sample document structure is provided in comments to clarify the schema.
+Indexes:
+The single-field index on name optimizes queries filtering or sorting by city name (e.g., Query 3).
+The compound index on name and area supports queries involving both fields, such as sorting by area after filtering by name (potentially useful for Query 1).
+Query 1: The aggregation pipeline projects only the required fields (name, area, population.total) to reduce data transfer and sorts by area in ascending order. Excluding _id keeps the output clean.
+Query 2: The find query uses dot notation to access the nested avgrainfall field and the $gt operator to filter for values greater than 60. The projection limits output to name and area.
+Query 3: The find query filters for Mumbai, sorts by population.total in descending order to get the highest value, and limits to one result. This handles cases where multiple documents might exist for Mumbai (e.g., different years).
+Efficiency: Indexes ensure fast filtering and sorting. Projections reduce the data returned, and the aggregation pipeline in Query 1 allows structured data processing.
+Why This Solution Satisfies the Problem
+Correct Syntax: The code uses standard MongoDB syntax for creating indexes (createIndex), querying (find), and aggregating (aggregate).
+Efficient Indexing: Single and compound indexes optimize performance for name-based filtering and area-based sorting.
+Precise Queries: Each query directly addresses the requirements, using appropriate operators ($gt, $sort, $project) and dot notation for nested fields.
+Theory Alignment: The solution leverages MongoDB’s compound and single-field indexes and uses aggregations and projections to enhance query efficiency, as noted in the provided theory.

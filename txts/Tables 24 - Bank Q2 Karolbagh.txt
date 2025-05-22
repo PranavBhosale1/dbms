@@ -1,0 +1,220 @@
+
+Tables 24 - Bank Q2 Karolbagh.txt
+==================================
+
+Question:
+---------
+Create the following tables with proper primary and foreign key constraints and insert data:
+
+1. Deposit (actno, cname, bname, amount, adate)
+2. Branch (bname, city)
+3. Customers (cname, city)
+4. Borrow (loanno, cname, bname, amount)
+
+Queries:
+--------
+1. Display amount for depositors living in the city where Anil is living.
+2. Display total loan and maximum loan taken from KAROLBAGH branch.
+3. Display total deposit of customers having account date later than ‘1-Jan-98’.
+4. Display maximum deposit of customers living in PUNE.
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS BankDB24;
+USE BankDB24;
+
+-- Step 2: Create tables with constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO Branch VALUES
+('KAROLBAGH', 'Delhi'),
+('SADASHIV', 'Pune'),
+('CHANDNI', 'Mumbai'),
+('MALVIYA', 'Delhi');
+
+INSERT INTO Customers VALUES
+('Anil', 'Pune'),
+('Sunil', 'Delhi'),
+('Jay Rajankar', 'Pune'),
+('Gaurav Kaushalye', 'Mumbai'),
+('Krishna Gandhi', 'Pune');
+
+INSERT INTO Deposit VALUES
+(101, 'Anil', 'SADASHIV', 5000.00, '1999-01-01'),
+(102, 'Sunil', 'KAROLBAGH', 6000.00, '1997-06-15'),
+(103, 'Jay Rajankar', 'SADASHIV', 7000.00, '1998-06-16'),
+(104, 'Gaurav Kaushalye', 'CHANDNI', 3000.00, '1999-09-01'),
+(105, 'Krishna Gandhi', 'SADASHIV', 8000.00, '2000-01-20');
+
+INSERT INTO Borrow VALUES
+(201, 'Anil', 'KAROLBAGH', 15000.00),
+(202, 'Sunil', 'CHANDNI', 18000.00),
+(203, 'Jay Rajankar', 'KAROLBAGH', 25000.00),
+(204, 'Gaurav Kaushalye', 'MALVIYA', 12000.00),
+(205, 'Krishna Gandhi', 'KAROLBAGH', 17000.00);
+
+-- Step 4: Required Queries
+
+-- 1. Display deposit amounts where depositor lives in the same city as Anil
+SELECT d.amount
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = (SELECT city FROM Customers WHERE cname = 'Anil');
+
+-- 2. Display total and max loan from KAROLBAGH branch
+SELECT SUM(amount) AS total_loan, MAX(amount) AS max_loan
+FROM Borrow
+WHERE bname = 'KAROLBAGH';
+
+-- 3. Total deposit where account date > '1998-01-01'
+SELECT SUM(amount) AS total_deposit
+FROM Deposit
+WHERE adate > '1998-01-01';
+
+-- 4. Max deposit by customers living in PUNE
+SELECT MAX(d.amount) AS max_deposit
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = 'PUNE';
+
+
+
+
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS BankDB24;
+USE BankDB24;
+Purpose: Creates the BankDB24 database if it doesn’t exist and switches to it for subsequent operations.
+Table Creation with Constraints:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], ... , [FOREIGN KEY (<column>) REFERENCES <table>(<column>)] );
+Example:
+sql
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+Purpose: Creates tables with:
+Primary keys (bname for Branch, cname for Customers, actno for Deposit, loanno for Borrow).
+Foreign keys linking Deposit and Borrow to Customers (cname) and Branch (bname).
+NOT NULL for required fields and DECIMAL(10,2) for precise monetary amounts.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... ), ...;
+Example:
+sql
+
+INSERT INTO Branch VALUES
+('KAROLBAGH', 'Delhi'),
+...
+Purpose: Populates tables with sample data, ensuring foreign key constraints are satisfied (e.g., cname and bname exist in Customers and Branch).
+Queries:
+Query 1: Depositors in Anil’s City:
+Syntax: SELECT <column> FROM <table1> JOIN <table2> ON <condition> WHERE <subquery>;
+Example:
+sql
+
+SELECT d.amount
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = (SELECT city FROM Customers WHERE cname = 'Anil');
+Purpose: Joins Deposit and Customers to find deposits by customers in Anil’s city (Pune).
+Query 2: Total and Max Loan from KAROLBAGH:
+Syntax: SELECT SUM(<column>) AS <alias>, MAX(<column>) AS <alias> FROM <table> WHERE <condition>;
+Example:
+sql
+
+SELECT SUM(amount) AS total_loan, MAX(amount) AS max_loan
+FROM Borrow
+WHERE bname = 'KAROLBAGH';
+Purpose: Aggregates loan amounts for the KAROLBAGH branch.
+Query 3: Total Deposit After 1998-01-01:
+Syntax: SELECT SUM(<column>) AS <alias> FROM <table> WHERE <condition>;
+Example:
+sql
+
+SELECT SUM(amount) AS total_deposit
+FROM Deposit
+WHERE adate > '1998-01-01';
+Purpose: Sums deposits with account dates after January 1, 1998.
+Query 4: Max Deposit in PUNE:
+Syntax: SELECT MAX(<column>) AS <alias> FROM <table1> JOIN <table2> ON <condition> WHERE <condition>;
+Example:
+sql
+
+SELECT MAX(d.amount) AS max_deposit
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = 'PUNE';
+Purpose: Finds the maximum deposit amount for customers in Pune.
+Explanation of Logic
+Database and Table Setup:
+The BankDB24 database is created.
+Tables are defined with primary keys for uniqueness and foreign keys to enforce referential integrity (e.g., Deposit.cname must exist in Customers.cname).
+Branch and Customers are created first to satisfy foreign key dependencies.
+Sample Data:
+Branch: Four branches in different cities.
+Customers: Five customers in Pune, Delhi, and Mumbai.
+Deposit: Five deposit records with varying amounts and dates (1997–2000).
+Borrow: Five loan records linked to branches and customers.
+Queries:
+Query 1: Identifies Anil’s city (Pune) using a subquery, joins Deposit and Customers, and retrieves deposit amounts for Pune residents (Anil, Jay Rajankar, Krishna Gandhi: ₹5000, ₹7000, ₹8000).
+Query 2: Uses SUM and MAX to calculate total (₹15000 + ₹25000 + ₹17000 = ₹57000) and maximum (₹25000) loan amounts for KAROLBAGH.
+Query 3: Sums deposits with adate > '1998-01-01' (accounts 101, 104, 105: ₹5000 + ₹3000 + ₹8000 = ₹16000).
+Query 4: Joins Deposit and Customers, filters for Pune customers, and finds the maximum deposit (₹8000 by Krishna Gandhi).
+Efficiency: Primary and foreign keys ensure efficient joins and lookups. Queries use minimal joins and aggregations, optimized for the small dataset.
+Why This Solution Satisfies the Problem
+Correct Syntax: Uses standard SQL syntax for database creation, table setup with constraints, data insertion, and query execution.
+Schema Adherence: Tables (Branch, Customers, Deposit, Borrow) match the specified schema, with proper primary and foreign key constraints.
+Query Accuracy:
+Query 1 correctly identifies deposits in Anil’s city using a join and subquery.
+Query 2 accurately aggregates loans for KAROLBAGH.
+Query 3 filters deposits by date and sums them.
+Query 4 finds the maximum deposit for Pune customers.
+Theory Alignment: Demonstrates relational database principles (primary/foreign keys, joins, aggregations) for managing banking data.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, and query execution—ensuring a fully functional solution.
+Enhanced Output: Retains the original logic and data, with clear query results and no modifications needed.

@@ -1,0 +1,217 @@
+
+DML 20 - BANK ABC OBC.txt
+==========================
+
+Question:
+---------
+Create the following tables and add primary key and foreign key wherever applicable. Insert data into the tables:
+
+1. Deposit (actno, cname, bname, amount, adate)
+2. Branch (bname, city)
+3. Customers (cname, city)
+4. Borrow (loanno, cname, bname, amount)
+
+Queries:
+--------
+1. Display account date of customers “ABC”.
+2. Modify the size of attribute of amount in Deposit.
+3. Display names of customers living in city Pune.
+4. Display name of the city where branch “OBC” is located.
+5. Find the number of tuples in the customer relation.
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS BankDB20;
+USE BankDB20;
+
+-- Step 2: Create tables with proper constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO Branch VALUES
+('SBI', 'Mumbai'),
+('OBC', 'Delhi'),
+('HDFC', 'Pune'),
+('BOI', 'Nagpur');
+
+INSERT INTO Customers VALUES
+('ABC', 'Pune'),
+('XYZ', 'Mumbai'),
+('Pranav Bhosale', 'Nagpur'),
+('Jay Rajankar', 'Pune'),
+('Anvay Kulkarni', 'Delhi');
+
+INSERT INTO Deposit VALUES
+(101, 'ABC', 'HDFC', 10000.00, '2024-01-10'),
+(102, 'XYZ', 'SBI', 12000.00, '2024-02-15'),
+(103, 'Jay Rajankar', 'HDFC', 14000.00, '2024-03-12'),
+(104, 'Anvay Kulkarni', 'OBC', 16000.00, '2024-04-18'),
+(105, 'Pranav Bhosale', 'BOI', 11000.00, '2024-05-22');
+
+INSERT INTO Borrow VALUES
+(201, 'ABC', 'HDFC', 15000.00),
+(202, 'XYZ', 'SBI', 17000.00),
+(203, 'Jay Rajankar', 'HDFC', 20000.00),
+(204, 'Anvay Kulkarni', 'OBC', 18000.00),
+(205, 'Pranav Bhosale', 'BOI', 19000.00);
+
+-- Step 4: Queries
+
+-- 1. Display account date of customers 'ABC'
+SELECT adate FROM Deposit
+WHERE cname = 'ABC';
+
+-- 2. Modify the size of 'amount' column in Deposit (assume changing from DECIMAL(10,2) to DECIMAL(12,2))
+ALTER TABLE Deposit MODIFY amount DECIMAL(12,2);
+
+-- 3. Display customers living in city Pune
+SELECT cname FROM Customers
+WHERE city = 'Pune';
+
+-- 4. Display city where branch 'OBC' is located
+SELECT city FROM Branch
+WHERE bname = 'OBC';
+
+-- 5. Count tuples in Customers table
+SELECT COUNT(*) AS total_customers FROM Customers;
+
+
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS BankDB20;
+USE BankDB20;
+Purpose: Creates the BankDB20 database if it doesn’t exist and switches to it for subsequent operations.
+Table Creation with Constraints:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], ... , [FOREIGN KEY (<column>) REFERENCES <table>(<column>)] );
+Example:
+sql
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+Purpose: Creates tables with:
+Primary keys (bname for Branch, cname for Customers, actno for Deposit, loanno for Borrow) to ensure uniqueness.
+Foreign keys in Deposit and Borrow linking to Customers.cname and Branch.bname for referential integrity.
+NOT NULL for required fields and DECIMAL(10,2) for precise monetary amounts.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... ), ...;
+Example:
+sql
+
+INSERT INTO Branch VALUES
+('SBI', 'Mumbai'),
+...
+Purpose: Populates tables with sample data, ensuring foreign key constraints are satisfied (e.g., cname and bname exist in Customers and Branch).
+Queries and Modification:
+Query 1: Account Date of Customer 'ABC':
+Syntax: SELECT <column> FROM <table> WHERE <condition>;
+Example:
+sql
+
+SELECT adate FROM Deposit
+WHERE cname = 'ABC';
+Purpose: Retrieves the account date for customer 'ABC' from the Deposit table.
+Query 2: Modify Amount Column Size:
+Syntax: ALTER TABLE <table> MODIFY <column> <new_type>;
+Example:
+sql
+
+ALTER TABLE Deposit MODIFY amount DECIMAL(12,2);
+Purpose: Changes the amount column in Deposit from DECIMAL(10,2) to DECIMAL(12,2) to allow larger values.
+Query 3: Customers in Pune:
+Syntax: SELECT <column> FROM <table> WHERE <condition>;
+Example:
+sql
+
+SELECT cname FROM Customers
+WHERE city = 'Pune';
+Purpose: Retrieves names of customers living in Pune.
+Query 4: City of Branch 'OBC':
+Syntax: SELECT <column> FROM <table> WHERE <condition>;
+Example:
+sql
+
+SELECT city FROM Branch
+WHERE bname = 'OBC';
+Purpose: Retrieves the city where the 'OBC' branch is located.
+Query 5: Count Tuples in Customers:
+Syntax: SELECT COUNT(*) AS <alias> FROM <table>;
+Example:
+sql
+
+SELECT COUNT(*) AS total_customers FROM Customers;
+Purpose: Counts the number of records in the Customers table.
+Explanation of Logic
+Database and Table Setup:
+The BankDB20 database is created.
+Tables are defined with primary keys for uniqueness and foreign keys to enforce referential integrity.
+Branch and Customers are created first to satisfy foreign key dependencies in Deposit and Borrow.
+Sample Data:
+Branch: Four branches in Mumbai, Delhi, Pune, and Nagpur.
+Customers: Five customers in Pune, Mumbai, Nagpur, and Delhi.
+Deposit: Five deposit records with amounts and 2024 dates.
+Borrow: Five loan records linked to branches and customers.
+Queries and Modification:
+Query 1: Retrieves the account date for 'ABC' from Deposit (result: 2024-01-10).
+Query 2: Modifies the amount column in Deposit to DECIMAL(12,2), increasing its capacity to handle larger monetary values while preserving two decimal places.
+Query 3: Retrieves customer names living in Pune from Customers (result: ABC, Jay Rajankar).
+Query 4: Retrieves the city of the 'OBC' branch from Branch (result: Delhi).
+Query 5: Counts the total number of customers in Customers (result: 5).
+Efficiency: Primary and foreign keys ensure efficient lookups and joins. Queries are simple and direct, optimized for the small dataset. The ALTER TABLE operation is straightforward, maintaining data integrity.
+Why This Solution Satisfies the Problem
+Correct Syntax: Uses standard SQL syntax for database creation, table setup with constraints, data insertion, column modification, and query execution.
+Schema Adherence: Tables (Branch, Customers, Deposit, Borrow) match the specified schema with proper primary and foreign key constraints.
+Query and Modification Accuracy:
+Query 1 correctly retrieves ABC’s account date.
+Query 2 appropriately modifies the amount column size.
+Query 3 lists Pune customers.
+Query 4 identifies the OBC branch’s city.
+Query 5 counts customer tuples.
+Theory Alignment: Demonstrates relational database principles (keys, DML operations, simple queries) for banking data management.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, column modification, and query execution.
+Enhanced Output: Retains the original logic and data, ensuring clear and accurate results with no modifications needed.

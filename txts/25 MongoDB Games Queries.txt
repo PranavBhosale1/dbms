@@ -1,0 +1,106 @@
+25 MongoDB Games Queries.txt
+
+Question:
+Create a collection 'games' with fields: name, gametype, score, achievements.
+Write queries to:
+- Return all games
+- Return top 3 by score
+- Return games with both 'Game Master' and 'Speed Demon' achievements
+
+Theory:
+MongoDB supports flexible queries and indexing. `$all` operator matches arrays that contain all specified elements.
+
+Why Our Solution Satisfies the Problem:
+- We use correct document structure.
+- We demonstrate $all and sort + limit.
+
+MongoDB Code:
+use entertainment;
+
+db.games.insertMany([
+    { name: "Game1", gametype: "RPG", score: 92, achievements: ["Game Master", "Speed Demon"] },
+    { name: "Game2", gametype: "Strategy", score: 87, achievements: ["Game Master"] },
+    { name: "Game3", gametype: "Action", score: 95, achievements: ["Speed Demon"] },
+    { name: "Game4", gametype: "Puzzle", score: 88, achievements: ["Game Master", "Speed Demon"] },
+    { name: "Game5", gametype: "Adventure", score: 75, achievements: [] }
+]);
+
+-- All games
+db.games.find();
+
+-- Top 3 scores
+db.games.find().sort({ score: -1 }).limit(3);
+
+-- Games with both achievements
+db.games.find({ achievements: { $all: ["Game Master", "Speed Demon"] } });
+
+Syntax Used
+Database Selection:
+Syntax: use <database_name>
+Example: use entertainment
+Purpose: Switches to the entertainment database. If it doesn’t exist, MongoDB creates it when data is inserted.
+Insert Documents:
+Syntax: db.collection.insertMany([ { <document1> }, { <document2> }, ... ])
+Example:
+javascript
+
+Copy
+db.games.insertMany([
+    { name: "Game1", gametype: "RPG", score: 92, achievements: ["Game Master", "Speed Demon"] },
+    { name: "Game2", gametype: "Strategy", score: 87, achievements: ["Game Master"] },
+    ...
+])
+Purpose: Inserts multiple documents into the games collection, creating it implicitly. Each document follows the specified schema with name, gametype, score, and achievements (an array).
+Find All Documents (Query 1):
+Syntax: db.collection.find({ <query> }, { <projection> })
+Example:
+javascript
+
+Copy
+db.games.find({}, { _id: 0 })
+Components:
+Query: {} (empty query) matches all documents in the collection.
+Projection: { _id: 0 } excludes the _id field from the output for cleaner results.
+Purpose: Retrieves all documents in the games collection.
+Find with Sort and Limit (Query 2):
+Syntax: db.collection.find({ <query> }, { <projection> }).sort({ <field>: <1 or -1> }).limit(<number>)
+Example:
+javascript
+
+Copy
+db.games.find({}, { _id: 0 }).sort({ score: -1 }).limit(3)
+Components:
+Query: {} matches all documents.
+Projection: { _id: 0 } excludes _id.
+sort: { score: -1 } orders documents by score in descending order (-1).
+limit(3): Returns only the top 3 results.
+Purpose: Retrieves the top 3 games by score.
+Find with Array Matching (Query 3):
+Syntax: db.collection.find({ <field>: { $all: [<value1>, <value2>, ...] } }, { <projection> })
+Example:
+javascript
+
+Copy
+db.games.find(
+    { achievements: { $all: ["Game Master", "Speed Demon"] } },
+    { _id: 0 }
+)
+Components:
+Query: { achievements: { $all: ["Game Master", "Speed Demon"] } } uses the $all operator to match documents where the achievements array contains both specified values (regardless of order).
+Projection: { _id: 0 } excludes _id.
+Purpose: Retrieves games with both "Game Master" and "Speed Demon" achievements.
+Explanation of Logic
+Database and Collection Setup: The use entertainment command selects the entertainment database. The insertMany operation creates the games collection with five sample documents, each containing name, gametype, score, and achievements as an array, following the specified schema.
+Query 1: The find query with an empty query object ({}) retrieves all documents in the games collection. The projection { _id: 0 } excludes the _id field to align with the task’s focus on the specified fields.
+Query 2: The find query retrieves all documents, sorts them by score in descending order (-1) to prioritize higher scores, and limits the output to 3 documents. The projection { _id: 0 } ensures a clean output.
+Query 3: The find query uses the $all operator to match documents where the achievements array contains both "Game Master" and "Speed Demon". The projection { _id: 0 } excludes _id for consistency.
+Efficiency: The queries are optimized for the small dataset provided. The $all operator efficiently handles array matching, and sort with limit ensures minimal data processing for Query 2. No indexes are created, as they are not required by the task, but they could be added (e.g., on score or achievements) for larger datasets.
+Why This Solution Satisfies the Problem
+Correct Syntax: The code uses standard MongoDB syntax for insertMany, find, sort, limit, and the $all operator, ensuring correct query execution.
+Document Structure: The games collection follows the specified schema, with achievements as an array to support the $all operator, as noted in the theory.
+Precise Queries:
+Query 1 retrieves all games.
+Query 2 returns the top 3 games by score using sort and limit.
+Query 3 uses $all to find games with both specified achievements, aligning with the theory’s emphasis on array matching.
+Theory Alignment: The solution leverages MongoDB’s flexible querying and the $all operator for array matching, as highlighted in the theory. The sort and limit combination demonstrates efficient data retrieval.
+Enhanced Output: The addition of { _id: 0 } in projections improves readability by excluding unnecessary fields, enhancing the original code.

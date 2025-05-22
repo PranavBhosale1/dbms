@@ -1,0 +1,129 @@
+
+Question 2: Company ERD to Tables with SQL Objects
+==================================================
+
+Question:
+---------
+Draw an ER for Company database with at least 4 entities and convert them into tables. 
+Perform DDL on above converted tables. 
+1. Create tables with all constraints 
+2. Create views on any two tables using conditions 
+3. Create index called EmployeeId for the department table. Entries should be in ascending 
+   order by department id and then by employee id within each department. 
+4. Create sequence on Employee id.
+
+Theory:
+-------
+In a company database, typical entities include:
+- Employee
+- Department
+- Project
+- Works_On
+
+We convert the ERD into relational tables. Primary and foreign keys establish relationships.
+We use:
+- Views to simplify data extraction involving joins or filters.
+- Indexes on department and employee id for performance.
+- AUTO_INCREMENT in MySQL to simulate sequences for employee ID.
+
+SQL Implementation:
+-------------------
+
+-- Step 1: Create Database
+CREATE DATABASE CompanyDB;
+USE CompanyDB;
+
+-- Step 2: Create Tables
+CREATE TABLE Department (
+    dept_id INT AUTO_INCREMENT PRIMARY KEY,
+    dept_name VARCHAR(50) NOT NULL,
+    location VARCHAR(100)
+);
+
+CREATE TABLE Employee (
+    emp_id INT AUTO_INCREMENT PRIMARY KEY,
+    emp_name VARCHAR(50) NOT NULL,
+    dept_id INT,
+    salary DECIMAL(10,2),
+    doj DATE,
+    FOREIGN KEY (dept_id) REFERENCES Department(dept_id)
+);
+
+CREATE TABLE Project (
+    proj_id INT AUTO_INCREMENT PRIMARY KEY,
+    proj_name VARCHAR(50),
+    location VARCHAR(100),
+    dept_id INT,
+    FOREIGN KEY (dept_id) REFERENCES Department(dept_id)
+);
+
+CREATE TABLE Works_On (
+    emp_id INT,
+    proj_id INT,
+    hours_worked INT,
+    PRIMARY KEY(emp_id, proj_id),
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id),
+    FOREIGN KEY (proj_id) REFERENCES Project(proj_id)
+);
+
+-- Step 3: Insert Sample Data
+INSERT INTO Department (dept_name, location) VALUES
+('IT', 'Pune'),
+('HR', 'Mumbai'),
+('Finance', 'Nashik'),
+('Marketing', 'Nagpur');
+
+INSERT INTO Employee (emp_name, dept_id, salary, doj) VALUES
+('Pranav Bhosale', 1, 60000, '2021-06-15'),
+('Jay Rajankar', 2, 45000, '2022-01-10'),
+('Anvay Kulkarni', 1, 55000, '2023-02-18'),
+('Krishna Gandhi', 3, 70000, '2020-08-05'),
+('Gaurav Kaushalye', 4, 52000, '2023-07-01');
+
+INSERT INTO Project (proj_name, location, dept_id) VALUES
+('Website Revamp', 'Pune', 1),
+('Recruitment Drive', 'Mumbai', 2),
+('Budget Analysis', 'Nashik', 3),
+('Ad Campaign', 'Nagpur', 4);
+
+INSERT INTO Works_On VALUES
+(1, 1, 20),
+(2, 2, 15),
+(3, 1, 25),
+(4, 3, 18),
+(5, 4, 22);
+
+-- Step 4: Create Views
+CREATE VIEW Employee_Project_View AS
+SELECT e.emp_name, p.proj_name, w.hours_worked
+FROM Employee e
+JOIN Works_On w ON e.emp_id = w.emp_id
+JOIN Project p ON p.proj_id = w.proj_id;
+
+CREATE VIEW Department_Employees AS
+SELECT d.dept_name, e.emp_name, e.salary
+FROM Department d
+JOIN Employee e ON d.dept_id = e.dept_id
+WHERE e.salary > 50000;
+
+-- Step 5: Create Index on Department by dept_id and emp_id
+CREATE INDEX EmployeeId ON Employee(dept_id ASC, emp_id ASC);
+
+-- Step 6: Sequence in MySQL handled by AUTO_INCREMENT
+
+Validation Queries:
+-------------------
+
+-- View employees and their projects
+SELECT * FROM Employee_Project_View;
+
+-- View high salary employees in each department
+SELECT * FROM Department_Employees;
+
+-- Validate index with an ordered employee list
+SELECT * FROM Employee ORDER BY dept_id, emp_id;
+
+-- Check AUTO_INCREMENT value for Employee
+SELECT AUTO_INCREMENT 
+FROM information_schema.tables 
+WHERE table_name = 'Employee' AND table_schema = 'CompanyDB';

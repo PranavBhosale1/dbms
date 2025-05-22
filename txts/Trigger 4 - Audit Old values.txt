@@ -1,0 +1,91 @@
+
+4 Trigger Audit.txt
+====================
+
+Question:
+---------
+Write a database trigger on Library table. The system should keep track of the records 
+that are being updated or deleted. The old value of updated or deleted records should be 
+added in Library_Audit table.
+
+Theory:
+-------
+This requires two triggers:
+1. An AFTER UPDATE trigger to capture old values before changes are made.
+2. An AFTER DELETE trigger to capture deleted rows.
+
+These triggers log all changes into a `Library_Audit` table, preserving `bid`, `bname`, `noc`, and timestamp.
+Useful in auditing and rollback scenarios.
+
+SQL Implementation:
+-------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS LibraryDB;
+USE LibraryDB;
+
+-- Step 2: Recreate base table (only if not already created)
+CREATE TABLE IF NOT EXISTS `Library` (
+    bid INT PRIMARY KEY,
+    bname VARCHAR(100),
+    doi DATE,
+    status VARCHAR(10),
+    noc INT
+);
+
+-- Step 3: Create or ensure audit table exists
+CREATE TABLE IF NOT EXISTS Library_Audit (
+    audit_id INT AUTO_INCREMENT PRIMARY KEY,
+    bid INT,
+    bname VARCHAR(100),
+    noc INT,
+    action_type VARCHAR(10),
+    timestampofquery TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Step 4: AFTER UPDATE trigger to log old values
+DELIMITER $$
+
+CREATE TRIGGER trg_after_update_audit
+AFTER UPDATE ON `Library`
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit (bid, bname, noc, action_type)
+    VALUES (OLD.bid, OLD.bname, OLD.noc, 'UPDATE');
+END;
+$$
+
+DELIMITER ;
+
+-- Step 5: AFTER DELETE trigger to log deleted records
+DELIMITER $$
+
+CREATE TRIGGER trg_after_delete_audit
+AFTER DELETE ON `Library`
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit (bid, bname, noc, action_type)
+    VALUES (OLD.bid, OLD.bname, OLD.noc, 'DELETE');
+END;
+$$
+
+DELIMITER ;
+
+Validation Queries:
+-------------------
+
+-- Insert some test data
+INSERT INTO `Library` VALUES 
+(201, 'Machine Learning', '2024-03-01', 'ISSUE', 2),
+(202, 'Python Programming', '2024-04-01', 'RETURN', 3);
+
+-- Update a row to test audit logging
+UPDATE `Library`
+SET bname = 'Advanced ML', noc = 1
+WHERE bid = 201;
+
+-- Delete a row to test delete audit
+DELETE FROM `Library` WHERE bid = 202;
+
+-- View audit table to confirm logged changes
+SELECT * FROM Library_Audit;

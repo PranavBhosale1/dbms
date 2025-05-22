@@ -1,0 +1,140 @@
+
+9 Library Fine Control.txt
+===========================
+
+Question:
+---------
+Write a PL/SQL block of code for the following requirements:
+
+Schema:
+1. Borrower(Rollin, Name, DateofIssue, NameofBook, Status)
+2. Fine(Roll_no, Date, Amt)
+3. Library (bid, bname, doi, status, noc)
+4. transaction (tid, bid, bname, status)
+
+Requirements:
+1. Accept roll_no and name of book from user.
+2. If days since DateofIssue are between 15 and 30 → fine = 5/day.
+3. If days > 30 → fine = 50/day.
+4. Update status from 'I' (Issue) to 'R' (Return) upon submission.
+5. Update noc in Library: Increase if RETURN, Decrease if ISSUE.
+6. Insert fine details into Fine table if applicable.
+
+SQL + PL/SQL Implementation:
+----------------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS LibraryControlDB;
+USE LibraryControlDB;
+
+-- Step 2: Create schema
+
+CREATE TABLE Borrower (
+    Rollin INT,
+    Name VARCHAR(50),
+    DateofIssue DATE,
+    NameofBook VARCHAR(100),
+    Status CHAR(1)
+);
+
+CREATE TABLE Fine (
+    Roll_no INT,
+    Date DATE,
+    Amt INT
+);
+
+CREATE TABLE `Library` (
+    bid INT PRIMARY KEY,
+    bname VARCHAR(100),
+    doi DATE,
+    status CHAR(1),
+    noc INT
+);
+
+CREATE TABLE transaction (
+    tid INT PRIMARY KEY AUTO_INCREMENT,
+    bid INT,
+    bname VARCHAR(100),
+    status CHAR(1)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO `Library` VALUES
+(1, 'The Alchemist', '2024-01-10', 'I', 5),
+(2, 'Harry Potter', '2024-02-01', 'I', 3);
+
+INSERT INTO Borrower VALUES
+(101, 'Pranav Bhosale', '2024-03-01', 'The Alchemist', 'I'),
+(102, 'Jay Rajankar', '2024-02-15', 'Harry Potter', 'I');
+
+-- Step 4: PL/SQL block
+
+DELIMITER $$
+
+CREATE PROCEDURE process_return(IN input_roll INT, IN input_book VARCHAR(100))
+BEGIN
+    DECLARE issue_date DATE;
+    DECLARE days_late INT;
+    DECLARE fine_amt INT DEFAULT 0;
+    DECLARE book_id INT;
+    DECLARE current_status CHAR(1);
+    DECLARE noc_count INT;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SELECT 'Error occurred. Check inputs or data integrity.' AS Message;
+    END;
+
+    -- Get issue date
+    SELECT DateofIssue INTO issue_date
+    FROM Borrower
+    WHERE Rollin = input_roll AND NameofBook = input_book;
+
+    SET days_late = DATEDIFF(CURDATE(), issue_date);
+
+    -- Calculate fine
+    IF days_late BETWEEN 15 AND 30 THEN
+        SET fine_amt = days_late * 5;
+    ELSEIF days_late > 30 THEN
+        SET fine_amt = days_late * 50;
+    END IF;
+
+    -- Update status in Borrower
+    UPDATE Borrower
+    SET Status = 'R'
+    WHERE Rollin = input_roll AND NameofBook = input_book;
+
+    -- Get bookid and current noc
+    SELECT bid, noc INTO book_id, noc_count
+    FROM `Library`
+    WHERE bname = input_book;
+
+    -- Update status and noc in Library
+    UPDATE `Library`
+    SET status = 'R', noc = noc + 1
+    WHERE bid = book_id;
+
+    -- Insert into transaction log
+    INSERT INTO transaction (bid, bname, status)
+    VALUES (book_id, input_book, 'R');
+
+    -- Insert into fine table if fine exists
+    IF fine_amt > 0 THEN
+        INSERT INTO Fine VALUES (input_roll, CURDATE(), fine_amt);
+    END IF;
+END;
+$$
+
+DELIMITER ;
+
+Execution Instructions:
+-----------------------
+
+-- Call procedure like this:
+CALL process_return(101, 'The Alchemist');
+
+-- Then check results:
+SELECT * FROM Borrower;
+SELECT * FROM `Library`;
+SELECT * FROM Fine;
+SELECT * FROM transaction;

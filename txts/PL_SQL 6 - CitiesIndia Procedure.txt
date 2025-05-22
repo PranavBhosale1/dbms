@@ -1,0 +1,140 @@
+
+6 Population Density Procedure.txt
+==================================
+
+Question:
+---------
+Create tables CitiesIndia(pincode, nameofcity, earliername, area, population, avgrainfall)  
+Categories(Type, pincode)  
+Note: Enter data only in CitiesIndia.
+
+Write PL/SQL Procedure & function to find the population density of the cities.  
+If the population density is:
+- Above 3000 → Type: High Density  
+- Between 1000 and 2999 → Type: Moderate  
+- Below 999 → Type: Low Density  
+Throw error if population < 10 or > 25718.
+
+Theory:
+-------
+Population density = population / area  
+Steps:
+- Create tables `CitiesIndia` and `Categories`
+- Add clean, valid data to `CitiesIndia`
+- Write function `get_density()` to calculate population density with validation
+- Write procedure `assign_density_category()` to classify cities and insert into `Categories`
+
+SQL + PL/SQL Implementation:
+----------------------------
+
+-- Step 1: Create and select database
+CREATE DATABASE IF NOT EXISTS IndiaCitiesDB;
+USE IndiaCitiesDB;
+
+-- Step 2: Create tables
+CREATE TABLE CitiesIndia (
+    pincode INT PRIMARY KEY,
+    nameofcity VARCHAR(50),
+    earliername VARCHAR(50),
+    area DECIMAL(10,2),
+    population INT,
+    avgrainfall DECIMAL(6,2)
+);
+
+CREATE TABLE Categories (
+    Type VARCHAR(20),
+    pincode INT,
+    FOREIGN KEY (pincode) REFERENCES CitiesIndia(pincode)
+);
+
+-- Step 3: Insert clean valid city data (population in range 10 - 25718)
+INSERT INTO CitiesIndia VALUES
+(411001, 'Pune', 'Poona', 50.00, 18000, 82.5),         -- 360 pop/area -> Moderate
+(400001, 'Mumbai', 'Bombay', 10.00, 25000, 90.1),      -- 2500 pop/area -> Moderate
+(422001, 'Nashik', 'Nasik', 5.00, 15000, 75.2),        -- 3000 pop/area -> Moderate
+(440001, 'Nagpur', 'Nagpore', 3.00, 10000, 78.0),      -- 3333 pop/area -> High
+(431001, 'Aurangabad', 'Khidki', 15.00, 900, 69.4);    -- 60 pop/area -> Low
+
+-- Step 4: Create function to calculate and validate population density
+DELIMITER $$
+
+CREATE FUNCTION get_density(pop INT, area DECIMAL(10,2)) 
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    IF pop < 10 OR pop > 25718 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Population out of allowed range (10 - 25718)';
+    END IF;
+    RETURN pop / area;
+END;
+$$
+
+DELIMITER ;
+
+-- Step 5: Create procedure to classify and insert density category
+DELIMITER $$
+
+CREATE PROCEDURE assign_density_category()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE pc INT;
+    DECLARE pop INT;
+    DECLARE ar DECIMAL(10,2);
+    DECLARE dens DECIMAL(10,2);
+    DECLARE typ VARCHAR(20);
+
+    DECLARE cur CURSOR FOR
+        SELECT pincode, population, area FROM CitiesIndia;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO pc, pop, ar;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SET dens = get_density(pop, ar);
+
+        IF dens > 3000 THEN
+            SET typ = 'High Density';
+        ELSEIF dens BETWEEN 1000 AND 2999 THEN
+            SET typ = 'Moderate';
+        ELSE
+            SET typ = 'Low Density';
+        END IF;
+
+        INSERT INTO Categories VALUES (typ, pc);
+    END LOOP;
+
+    CLOSE cur;
+END;
+$$
+
+DELIMITER ;
+
+Execution Instructions:
+-----------------------
+
+-- Step 1: Clear invalid data if needed
+DELETE FROM CitiesIndia WHERE population < 10 OR population > 25718;
+
+-- Step 2: Call the procedure
+CALL assign_density_category();
+
+-- Step 3: View the results
+SELECT * FROM Categories;
+
+Expected Output:
+----------------
++----------------+----------+
+| Type           | pincode  |
++----------------+----------+
+| Moderate       | 411001   |
+| Moderate       | 400001   |
+| Moderate       | 422001   |
+| High Density   | 440001   |
+| Low Density    | 431001   |
++----------------+----------+

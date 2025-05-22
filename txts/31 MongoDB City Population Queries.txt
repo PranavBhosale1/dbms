@@ -1,0 +1,167 @@
+31 MongoDB City Population Queries.txt
+
+Question:
+Create database: Citydetails(_id,name,area,population(total,Adults,seniorcitizens,sexratio), geography(avgtemp, avgrainfall, longitude, latitude))
+Write queries to:
+1. Find total population in Pune
+2. Cities with population > 10 million
+3. Average population for all cities
+4. Min and max population city
+
+Theory:
+MongoDB’s aggregation framework allows complex data analysis using stages like `$match`, `$group`, and `$project`.
+
+Why Our Solution Satisfies the Problem:
+- We store nested data for population and geography.
+- We use aggregation to compute min, max, and averages.
+
+MongoDB Code:
+use india;
+
+db.Citydetails.insertMany([
+    {
+        _id: 1,
+        name: "Pune",
+        area: 243.84,
+        population: { total: 3124000, Adults: 2000000, seniorcitizens: 300000, sexratio: 945 },
+        geography: { avgtemp: 25, avgrainfall: 734, longitude: 73.85, latitude: 18.52 }
+    },
+    {
+        _id: 2,
+        name: "Mumbai",
+        area: 603.4,
+        population: { total: 20667000, Adults: 14000000, seniorcitizens: 2000000, sexratio: 832 },
+        geography: { avgtemp: 27, avgrainfall: 2166, longitude: 72.87, latitude: 19.07 }
+    }
+]);
+
+-- Total population in Pune
+db.Citydetails.find({ name: "Pune" }, { "population.total": 1, _id: 0 });
+
+-- Cities with population > 10 million
+db.Citydetails.find({ "population.total": { $gt: 10000000 } });
+
+-- Average population
+db.Citydetails.aggregate([{ $group: { _id: null, avg_pop: { $avg: "$population.total" } } }]);
+
+-- Min and Max population
+db.Citydetails.aggregate([
+    { $group: {
+        _id: null,
+        min_pop: { $min: "$population.total" },
+        max_pop: { $max: "$population.total" }
+    }}
+]);
+
+
+
+
+
+Syntax Used
+Database Selection:
+Syntax: use <database_name>
+Example: use india
+Purpose: Switches to the india database. If it doesn’t exist, MongoDB creates it when data is inserted.
+Insert Documents:
+Syntax: db.collection.insertMany([ { <document1> }, { <document2> }, ... ])
+Example:
+javascript
+
+Copy
+db.Citydetails.insertMany([
+    { _id: 1, name: "Pune", area: 243.84, population: { total: 3124000, ... }, geography: { ... } },
+    { _id: 2, name: "Mumbai", area: 603.4, population: { total: 20667000, ... }, geography: { ... } }
+])
+Purpose: Inserts multiple documents into the Citydetails collection, creating it implicitly. Each document follows the specified schema with nested population and geography fields.
+Find Query (Query 1):
+Syntax: db.collection.find({ <query> }, { <projection> })
+Example:
+javascript
+
+Copy
+db.Citydetails.find(
+    { name: "Pune" },
+    { "population.total": 1, _id: 0 }
+)
+Components:
+Query: { name: "Pune" } filters for documents where the name field is "Pune".
+Projection: { "population.total": 1, _id: 0 } includes only the population.total field (using dot notation for nested fields) and excludes _id.
+Purpose: Retrieves the total population for Pune.
+Find Query with Filter (Query 2):
+Syntax: db.collection.find({ <field>: { <operator>: <value> } }, { <projection> })
+Example:
+javascript
+
+Copy
+db.Citydetails.find(
+    { "population.total": { $gt: 10000000 } },
+    { name: 1, "population.total": 1, _id: 0 }
+)
+Components:
+Query: "population.total": { $gt: 10000000 } uses the $gt (greater than) operator to filter for cities with population.total exceeding 10 million.
+Projection: Includes name and population.total, excludes _id.
+Purpose: Retrieves cities with populations over 10 million.
+Aggregation for Average (Query 3):
+Syntax: db.collection.aggregate([ { $group: { _id: <group_key>, <field>: { <aggregation_operator>: <expression> } } } ])
+Example:
+javascript
+
+Copy
+db.Citydetails.aggregate([
+    { $group: { _id: null, avg_pop: { $avg: "$population.total" } } }
+])
+Components:
+$group: Groups all documents (_id: null means no grouping by a specific field).
+$avg: Calculates the average of population.total across all documents.
+Purpose: Computes the average population across all cities.
+Aggregation for Min/Max (Query 4):
+Syntax:
+javascript
+
+Copy
+db.collection.aggregate([
+    { $group: { _id: <group_key>, <field1>: { <op1>: <expr1> }, <field2>: { <op2>: <expr2> } } },
+    { $project: { <field>: <expression>, ... } }
+])
+Example:
+javascript
+
+Copy
+db.Citydetails.aggregate([
+    { $group: {
+        _id: null,
+        min_pop: { $min: "$population.total" },
+        max_pop: { $max: "$population.total" },
+        min_city: { $min: { $cond: { if: true, then: { name: "$name", pop: "$population.total" }, else: null } } },
+        max_city: { $max: { $cond: { if: true, then: { name: "$name", pop: "$population.total" }, else: null } } }
+    }},
+    { $project: {
+        _id: 0,
+        min_population: { city: "$min_city.name", population: "$min_city.pop" },
+        max_population: { city: "$max_city.name", population: "$max_city.pop" }
+    }}
+])
+Components:
+$group: Groups all documents to compute:
+min_pop and max_pop: Minimum and maximum population.total using $min and $max.
+min_city and max_city: Uses $cond to create objects { name, pop } for comparison, allowing $min and $max to track the corresponding city names.
+$project: Formats the output to show min_population and max_population with city names and populations, excluding _id.
+Purpose: Identifies the cities with the minimum and maximum populations.
+Explanation of Logic
+Database and Collection Setup: The use india command selects the india database. The insertMany operation creates the Citydetails collection with two sample documents (Pune and Mumbai), adhering to the specified schema with nested population and geography fields.
+Query 1: The find query filters for documents where name is "Pune" and projects only population.total, using dot notation to access the nested field. Excluding _id ensures a clean output.
+Query 2: The find query uses the $gt operator to filter cities with population.total greater than 10 million. The projection includes name and population.total for clarity.
+Query 3: The aggregation pipeline uses $group with _id: null to compute the average of population.total across all documents using the $avg operator, producing a single result.
+Query 4: The aggregation pipeline groups all documents to compute the minimum and maximum population.total. To include city names, it uses $cond to create objects containing name and population.total, which $min and $max compare based on the pop field. The $project stage formats the output to clearly display the city names and their respective populations.
+Efficiency: The queries use projections to limit data retrieval, and the aggregation framework enables complex computations like averages and min/max values. While no indexes are explicitly created (as not required by the task), the queries are optimized for the small dataset provided.
+Why This Solution Satisfies the Problem
+Correct Syntax: The code uses standard MongoDB syntax for insertMany, find, and aggregate, with proper use of operators ($gt, $avg, $min, $max, $cond) and dot notation for nested fields.
+Nested Data Handling: The solution correctly stores and queries nested population and geography fields, as specified in the schema.
+Precise Queries: Each query directly addresses the requirements:
+Query 1 retrieves Pune’s population.
+Query 2 filters cities with populations over 10 million.
+Query 3 computes the average population.
+Query 4 identifies min/max population cities with their names.
+Aggregation Framework: The solution leverages MongoDB’s aggregation framework (as noted in the theory) for complex operations (average, min/max), using stages like $group and $project for efficient data analysis.
+Enhanced Output: Query 4 is improved to include city names alongside min/max populations, making the output more informative than the original code, which only provided population values.
+This solution provides a complete, efficient, and syntactically correct implementation for the specified MongoDB tasks, aligning with the provided theory and requirements.

@@ -1,0 +1,106 @@
+17 MongoDB CRUD Orders.txt
+
+Question:
+Create a collection Orders(cust_id, amount, status). Perform all CRUD operations.
+
+Theory:
+CRUD stands for Create, Read, Update, and Delete operations, which are the basic functions of persistent storage.
+
+Why Our Solution Satisfies the Problem:
+- We demonstrate each CRUD operation using MongoDB syntax.
+- Data is inserted, read, modified, and deleted as required.
+
+MongoDB Code:
+use ecommerce;
+
+-- Create
+db.Orders.insertMany([
+    { cust_id: 1, amount: 200, status: "pending" },
+    { cust_id: 2, amount: 450, status: "shipped" },
+    { cust_id: 3, amount: 300, status: "delivered" }
+]);
+
+-- Read
+db.Orders.find();
+db.Orders.find({ status: "shipped" });
+
+-- Update
+db.Orders.updateOne({ cust_id: 1 }, { $set: { status: "shipped" } });
+
+-- Delete
+db.Orders.deleteOne({ cust_id: 3 });
+
+
+
+Syntax Used
+Database Selection:
+Syntax: use <database_name>
+Example: use ecommerce
+Purpose: Switches to the ecommerce database, creating it if it doesn’t exist when data is inserted.
+Create (Insert Documents):
+Syntax: db.collection.insertMany([ { <document1> }, { <document2> }, ... ])
+Example:
+javascript
+
+Copy
+db.Orders.insertMany([
+    { cust_id: 1, amount: 200, status: "pending" },
+    { cust_id: 2, amount: 450, status: "shipped" },
+    { cust_id: 3, amount: 300, status: "delivered" }
+])
+Purpose: Inserts multiple documents into the Orders collection, creating it implicitly. Each document follows the specified schema with cust_id, amount, and status.
+Read (Find Documents):
+Syntax: db.collection.find({ <query> }, { <projection> })
+Examples:
+javascript
+
+Copy
+db.Orders.find({}, { _id: 0 }) // Retrieve all orders
+db.Orders.find({ status: "shipped" }, { _id: 0 }) // Retrieve orders with status "shipped"
+Components:
+Query: {} (empty query) matches all documents; { status: "shipped" } filters for documents with status equal to "shipped".
+Projection: { _id: 0 } excludes the _id field for cleaner output.
+Purpose: Retrieves all orders or specific orders based on a condition.
+Update (Modify Documents):
+Syntax: db.collection.updateOne({ <query> }, { $set: { <field>: <value> } })
+Example:
+javascript
+
+Copy
+db.Orders.updateOne(
+    { cust_id: 1 },
+    { $set: { status: "shipped" } }
+)
+Components:
+Query: { cust_id: 1 } identifies the document to update.
+$set: Updates the status field to "shipped" without modifying other fields.
+Purpose: Updates a single document’s status field for the specified cust_id.
+Delete (Remove Documents):
+Syntax: db.collection.deleteOne({ <query> })
+Example:
+javascript
+
+Copy
+db.Orders.deleteOne({ cust_id: 3 })
+Components:
+Query: { cust_id: 3 } identifies the document to delete.
+Purpose: Removes a single document matching the specified cust_id.
+Explanation of Logic
+Database and Collection Setup: The use ecommerce command selects the ecommerce database. The insertMany operation creates the Orders collection with three sample documents, each containing cust_id, amount, and status as per the schema.
+Create: The insertMany operation populates the collection with sample data, ensuring the collection is ready for subsequent CRUD operations.
+Read:
+The first find query retrieves all documents, excluding _id for cleaner output.
+The second find query filters for orders with status: "shipped", demonstrating conditional retrieval.
+Update: The updateOne operation changes the status of the order with cust_id: 1 to "shipped", using $set to modify only the specified field.
+Delete: The deleteOne operation removes the order with cust_id: 3, ensuring only one document is affected.
+Efficiency: The queries are straightforward and optimized for the small dataset. No indexes are created, as they are not required by the task, but an index on cust_id or status could be added for larger datasets to improve performance.
+Why This Solution Satisfies the Problem
+Correct Syntax: The code uses standard MongoDB syntax for insertMany, find, updateOne, and deleteOne, ensuring accurate execution of all CRUD operations.
+Complete CRUD Coverage: The solution demonstrates:
+Create: Inserts multiple documents with insertMany.
+Read: Retrieves all documents and filtered documents with find.
+Update: Modifies a specific document with updateOne.
+Delete: Removes a specific document with deleteOne.
+Theory Alignment: The solution aligns with the CRUD theory by implementing the basic functions of persistent storage (Create, Read, Update, Delete) using MongoDB’s native operations.
+Enhanced Output: The addition of { _id: 0 } in find queries improves readability by excluding unnecessary fields, enhancing the original code.
+Data Structure: The Orders collection adheres to the specified schema, ensuring all operations work with the correct document structure.

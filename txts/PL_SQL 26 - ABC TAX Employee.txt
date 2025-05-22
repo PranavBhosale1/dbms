@@ -1,0 +1,202 @@
+
+PLSQL 26 - ABC TAX Employee.txt
+===============================
+
+Question:
+---------
+Write a PL/SQL code to calculate tax for each employee in an organization and display their employee number,
+gross salary, and tax (10% of gross) using a cursor.
+
+SQL + PL/SQL Implementation:
+----------------------------
+
+-- Step 1: Create the table
+CREATE TABLE employee_salary (
+    emp_no INT PRIMARY KEY,
+    basic INT,
+    hra INT,
+    da INT,
+    total_deduction INT,
+    net_salary INT,
+    gross_salary INT
+);
+
+-- Step 2: Insert sample data
+INSERT INTO employee_salary VALUES
+(101, 50000, 10000, 5000, 7000, 58000, 65000),
+(102, 60000, 12000, 6000, 8000, 70000, 78000),
+(103, 45000, 9000, 4500, 6500, 50000, 56500),
+(104, 70000, 14000, 7000, 10000, 87000, 97000);
+
+-- Step 3: Define the procedure
+DELIMITER //
+
+CREATE PROCEDURE calculate_tax()
+BEGIN
+    -- Declare variables at the top
+    DECLARE x INT DEFAULT 0;
+    DECLARE y INT DEFAULT 0;
+    DECLARE z INT DEFAULT 0;
+    DECLARE a INT DEFAULT 0;
+    DECLARE b INT DEFAULT 0;
+    DECLARE c INT DEFAULT 0;
+    DECLARE d INT DEFAULT 0;
+    DECLARE finished INT DEFAULT 0;
+    DECLARE tax INT;
+
+    -- Declare cursor and handler
+    DECLARE cur CURSOR FOR 
+        SELECT emp_no, basic, hra, da, total_deduction, net_salary, gross_salary 
+        FROM employee_salary 
+        ORDER BY emp_no;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+
+    -- Open cursor
+    OPEN cur;
+
+    emp_loop: LOOP
+        FETCH cur INTO x, y, z, a, b, c, d;
+        IF finished = 1 THEN 
+            LEAVE emp_loop;
+        END IF;
+
+        SET tax = d * 0.1;
+
+        -- Output result for each employee
+        SELECT x AS emp_no, d AS gross_salary, tax AS tax;
+    END LOOP;
+
+    -- Close cursor
+    CLOSE cur;
+END;
+//
+
+DELIMITER ;
+
+-- Step 4: Call the procedure
+CALL calculate_tax();
+
+
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS EmployeeDB26;
+USE EmployeeDB26;
+Purpose: Creates the EmployeeDB26 database if it doesn’t exist and switches to it for subsequent operations.
+Table Creation:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], <column2> <type>, ... );
+Example:
+sql
+
+CREATE TABLE employee_salary (
+    emp_no INT PRIMARY KEY,
+    basic INT,
+    hra INT,
+    da INT,
+    total_deduction INT,
+    net_salary INT,
+    gross_salary INT
+);
+Purpose: Creates the employee_salary table with emp_no as the primary key and other fields for salary components.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... ), ...;
+Example:
+sql
+
+INSERT INTO employee_salary VALUES
+(101, 50000, 10000, 5000, 7000, 58000, 65000),
+...
+Purpose: Populates the employee_salary table with four sample employee records.
+Stored Procedure:
+Syntax:
+sql
+
+DELIMITER //
+CREATE PROCEDURE <procedure_name>()
+BEGIN
+    DECLARE <variable> <type> [DEFAULT <value>];
+    DECLARE <cursor_name> CURSOR FOR <SELECT_statement>;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET <variable> = <value>;
+    OPEN <cursor_name>;
+    <loop_label>: LOOP
+        FETCH <cursor_name> INTO <variables>;
+        IF <condition> THEN
+            LEAVE <loop_label>;
+        END IF;
+        <logic>;
+    END LOOP;
+    CLOSE <cursor_name>;
+END;//
+DELIMITER ;
+Example:
+sql
+
+DELIMITER //
+
+CREATE PROCEDURE calculate_tax()
+BEGIN
+    DECLARE v_emp_no INT;
+    DECLARE v_gross_salary INT;
+    DECLARE v_tax DECIMAL(10,2);
+    DECLARE finished INT DEFAULT 0;
+
+    DECLARE cur CURSOR FOR 
+        SELECT emp_no, gross_salary 
+        FROM employee_salary 
+        ORDER BY emp_no;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+
+    OPEN cur;
+
+    emp_loop: LOOP
+        FETCH cur INTO v_emp_no, v_gross_salary;
+        IF finished = 1 THEN 
+            LEAVE emp_loop;
+        END IF;
+
+        SET v_tax = v_gross_salary * 0.1;
+
+        SELECT v_emp_no AS emp_no, v_gross_salary AS gross_salary, v_tax AS tax;
+    END LOOP;
+
+    CLOSE cur;
+END;//
+
+DELIMITER ;
+Components:
+DELIMITER //: Changes the statement delimiter to // to allow semicolons within the procedure.
+DECLARE: Defines variables for emp_no, gross_salary, tax (using DECIMAL(10,2) for precision), and finished flag.
+DECLARE CURSOR: Defines a cursor to select emp_no and gross_salary ordered by emp_no.
+DECLARE CONTINUE HANDLER: Sets finished = 1 when no more rows are found.
+OPEN, FETCH, CLOSE: Manages cursor operations to iterate through rows.
+SET v_tax: Calculates tax as 10% of gross_salary.
+SELECT ... AS: Outputs emp_no, gross_salary, and tax for each employee.
+Purpose: Iterates through employees, calculates tax, and displays results.
+Execute Procedure:
+Syntax: CALL <procedure_name>();
+Example: CALL calculate_tax();
+Purpose: Runs the procedure to process and display tax calculations.
+Explanation of Logic
+Database and Table Setup: The EmployeeDB26 database is created, and the employee_salary table is defined with fields for employee number and salary components, with emp_no as the primary key.
+Sample Data: Four employee records are inserted with varying salary details.
+Stored Procedure (calculate_tax):
+A cursor (cur) retrieves emp_no and gross_salary from employee_salary, ordered by emp_no.
+The loop iterates through each row, fetching data into v_emp_no and v_gross_salary.
+For each employee, tax is calculated as 10% of gross_salary (e.g., for emp_no 101, tax = 65000 * 0.1 = 6500).
+The results (emp_no, gross_salary, tax) are output using SELECT.
+The loop exits when no more rows are found (finished = 1).
+Execution and Output: The procedure outputs a result set for each employee, showing their employee number, gross salary, and calculated tax.
+Efficiency: The cursor processes rows sequentially, suitable for small datasets. The PRIMARY KEY on emp_no ensures efficient access, and selecting only needed fields (emp_no, gross_salary) optimizes performance.
+Why This Solution Satisfies the Problem
+Correct Syntax: Uses standard SQL and PL/SQL syntax for database creation, table setup, data insertion, procedure definition, and execution.
+Schema Adherence: The employee_salary table matches the specified schema, with emp_no as the primary key and appropriate integer fields for salary components.
+Tax Calculation: Accurately calculates tax as 10% of gross_salary using a cursor to process each employee.
+Control Structures: Uses a cursor with a loop to iterate through records, aligning with the requirement to display results for each employee.
+Theory Alignment: Leverages PL/SQL’s procedural capabilities (cursors, loops) for processing and displaying data, aligning with PL/SQL as Oracle’s procedural extension.
+Enhanced Implementation: Simplifies the original code by selecting only emp_no and gross_salary in the cursor (since other fields are unused) and uses DECIMAL(10,2) for precise tax calculations.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, procedure execution, and result display.

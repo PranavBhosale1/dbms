@@ -1,0 +1,223 @@
+
+PLSQL 29 - Student Percentage.txt
+==================================
+
+Question:
+---------
+Write a PL/SQL procedure to find the number of students in each percentage range:
+- 100–70%
+- 69–60%
+- 59–50%
+- Below 49%
+for a given course from the Student table.
+
+Schema:
+-------
+Student (ROLL_NO, COURSE, COURSE_COD, SEM, TOTAL_MARKS, PERCENTAGE)
+
+SQL + PL/SQL Implementation:
+----------------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS StudentDB29;
+USE StudentDB29;
+
+-- Step 2: Create the Student table
+
+CREATE TABLE Student (
+    ROLL_NO INT PRIMARY KEY,
+    COURSE VARCHAR(50),
+    COURSE_COD VARCHAR(10),
+    SEM INT,
+    TOTAL_MARKS INT,
+    PERCENTAGE DECIMAL(5,2)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO Student VALUES
+(1, 'DBMS', 'CS501', 4, 90, 90.00),
+(2, 'DBMS', 'CS501', 4, 78, 78.00),
+(3, 'DBMS', 'CS501', 4, 64, 64.00),
+(4, 'DBMS', 'CS501', 4, 52, 52.00),
+(5, 'DBMS', 'CS501', 4, 45, 45.00),
+(6, 'OS', 'CS502', 4, 91, 91.00),
+(7, 'OS', 'CS502', 4, 65, 65.00),
+(8, 'OS', 'CS502', 4, 54, 54.00),
+(9, 'OS', 'CS502', 4, 47, 47.00),
+(10, 'OS', 'CS502', 4, 39, 39.00);
+
+-- Step 4: Procedure to count student ranges by course
+
+DELIMITER $$
+
+CREATE PROCEDURE Get_Percent_Count(IN input_course VARCHAR(50))
+BEGIN
+    DECLARE high INT DEFAULT 0;
+    DECLARE upper_mid INT DEFAULT 0;
+    DECLARE lower_mid INT DEFAULT 0;
+    DECLARE fail INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO high
+    FROM Student
+    WHERE COURSE = input_course AND PERCENTAGE BETWEEN 70 AND 100;
+
+    SELECT COUNT(*) INTO upper_mid
+    FROM Student
+    WHERE COURSE = input_course AND PERCENTAGE BETWEEN 60 AND 69;
+
+    SELECT COUNT(*) INTO lower_mid
+    FROM Student
+    WHERE COURSE = input_course AND PERCENTAGE BETWEEN 50 AND 59;
+
+    SELECT COUNT(*) INTO fail
+    FROM Student
+    WHERE COURSE = input_course AND PERCENTAGE < 50;
+
+    -- Display Results
+    SELECT
+        input_course AS Course,
+        high AS `70-100%`,
+        upper_mid AS `60-69%`,
+        lower_mid AS `50-59%`,
+        fail AS `Below 50%`;
+END$$
+
+DELIMITER ;
+
+-- Step 5: Execute the procedure
+CALL Get_Percent_Count('OS');
+CALL Get_Percent_Count('DBMS');
+
+Below is the solution for the PL/SQL task based on the provided task from "PLSQL 29 - Student Percentage.txt". It includes the creation of the database and Student table, a stored procedure to count students in specified percentage ranges for a given course, insertion of sample data, execution of the procedure, and proper PL/SQL syntax. A detailed explanation of the syntax used and the logic behind each operation is provided. The code is wrapped in an artifact tag as per the guidelines, with the content type set to text/sql for PL/SQL.
+
+The task requires:
+
+Creating a database StudentDB29 and a Student table with fields ROLL_NO, COURSE, COURSE_COD, SEM, TOTAL_MARKS, and PERCENTAGE.
+Writing a PL/SQL procedure Get_Percent_Count to count the number of students in each percentage range for a given course:
+100–70%
+69–60%
+59–50%
+Below 49%
+Inserting sample data and executing the procedure for specific courses.
+PLSQL Student Percentage Count
+sql
+Show inline
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS StudentDB29;
+USE StudentDB29;
+Purpose: Creates the StudentDB29 database if it doesn’t exist and switches to it for subsequent operations.
+Table Creation:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], <column2> <type>, ... );
+Example:
+sql
+
+CREATE TABLE Student (
+    ROLL_NO INT PRIMARY KEY,
+    COURSE VARCHAR(50),
+    COURSE_COD VARCHAR(10),
+    SEM INT,
+    TOTAL_MARKS INT,
+    PERCENTAGE DECIMAL(5,2)
+);
+Purpose: Creates the Student table with columns for roll number (primary key), course, course code, semester, total marks, and percentage. DECIMAL(5,2) ensures two decimal places for percentage (e.g., 90.00).
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... ), ...;
+Example:
+sql
+
+INSERT INTO Student VALUES
+(1, 'DBMS', 'CS501', 4, 90, 90.00),
+...
+Purpose: Populates the Student table with ten sample records for two courses (DBMS and OS) with varying percentages.
+Stored Procedure:
+Syntax:
+sql
+
+DELIMITER $$
+CREATE PROCEDURE <procedure_name>(IN <param> <type>)
+BEGIN
+    DECLARE <variable> <type> [DEFAULT <value>];
+    SELECT COUNT(*) INTO <variable> FROM <table> WHERE <condition>;
+    ...
+    SELECT <columns> AS <aliases>;
+END$$
+DELIMITER ;
+Example:
+sql
+
+DELIMITER $$
+
+CREATE PROCEDURE Get_Percent_Count(IN input_course VARCHAR(50))
+BEGIN
+    DECLARE high INT DEFAULT 0;
+    DECLARE upper_mid INT DEFAULT 0;
+    DECLARE lower_mid INT DEFAULT 0;
+    DECLARE fail INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO high
+    FROM Student
+    WHERE COURSE = input_course AND PERCENTAGE BETWEEN 70 AND 100;
+
+    SELECT COUNT(*) INTO upper_mid
+    FROM Student
+    WHERE COURSE = input_course AND PERCENTAGE BETWEEN 60 AND 69;
+
+    SELECT COUNT(*) INTO lower_mid
+    FROM Student
+    WHERE COURSE = input_course AND PERCENTAGE BETWEEN 50 AND 59;
+
+    SELECT COUNT(*) INTO fail
+    FROM Student
+    WHERE COURSE = input_course AND PERCENTAGE < 50;
+
+    SELECT
+        input_course AS Course,
+        high AS `70-100%`,
+        upper_mid AS `60-69%`,
+        lower_mid AS `50-59%`,
+        fail AS `Below 50%`;
+END$$
+
+DELIMITER ;
+Components:
+DELIMITER $$: Changes the statement delimiter to $$ to allow semicolons within the procedure.
+CREATE PROCEDURE: Defines the procedure with an input parameter input_course.
+DECLARE: Defines variables to store counts for each percentage range (high, upper_mid, lower_mid, fail).
+SELECT COUNT(*) INTO: Counts students in each percentage range for the specified course using BETWEEN and < conditions.
+SELECT ... AS: Outputs the results with column aliases for clarity.
+Purpose: Counts students in the specified percentage ranges for a given course and displays the results.
+Execute Procedure:
+Syntax: CALL <procedure_name>(<argument>);
+Example:
+sql
+
+CALL Get_Percent_Count('OS');
+CALL Get_Percent_Count('DBMS');
+Purpose: Runs the procedure for the OS and DBMS courses to generate percentage range counts.
+Explanation of Logic
+Database and Table Setup: The StudentDB29 database is created, and the Student table is defined with columns matching the schema. ROLL_NO is a primary key for uniqueness, and PERCENTAGE uses DECIMAL(5,2) for precise storage.
+Sample Data: Ten records are inserted, with five students each for DBMS (CS501) and OS (CS502), covering a range of percentages to test all categories (100–70%, 69–60%, 59–50%, Below 50%).
+Stored Procedure (Get_Percent_Count):
+Takes an input parameter input_course to specify the course (e.g., 'DBMS' or 'OS').
+Uses four variables (high, upper_mid, lower_mid, fail) to store counts for each percentage range.
+Executes four SELECT COUNT(*) INTO statements to count students in the ranges:
+70–100%: PERCENTAGE BETWEEN 70 AND 100
+60–69%: PERCENTAGE BETWEEN 60 AND 69
+50–59%: PERCENTAGE BETWEEN 50 AND 59
+Below 50%: PERCENTAGE < 50
+Outputs a single row with the course name and counts for each range, using aliases for clarity.
+Execution: The procedure is called for OS and DBMS, producing separate result sets for each course.
+Efficiency: The procedure uses simple COUNT(*) queries with WHERE clauses, efficient for small datasets. For larger datasets, an index on COURSE or PERCENTAGE could be added.
+Why This Solution Satisfies the Problem
+Correct Syntax: The code uses standard SQL and PL/SQL syntax for database creation, table setup, data insertion, procedure definition, and execution.
+Schema Adherence: The Student table matches the specified schema, with appropriate data types (DECIMAL(5,2) for PERCENTAGE, PRIMARY KEY for ROLL_NO).
+Procedure Logic: The Get_Percent_Count procedure accurately counts students in the specified percentage ranges (100–70%, 69–60%, 59–50%, Below 49%) for a given course.
+Theory Alignment: The solution uses PL/SQL’s procedural capabilities to process data and produce aggregated results, aligning with PL/SQL as Oracle’s procedural extension for complex logic.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, procedure execution, and result generation—ensuring a fully functional program.
+Enhanced Output: The output format with column aliases (70-100%, 60-69%, etc.) is clear and matches the original code, with no modifications needed.

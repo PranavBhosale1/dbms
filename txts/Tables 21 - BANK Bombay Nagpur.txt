@@ -1,0 +1,226 @@
+
+Tables 21 - BANK Bombay Nagpur.txt
+===================================
+
+Question:
+---------
+Create the following tables and add primary key and foreign key wherever applicable. Insert data:
+
+1. Deposit (actno, cname, bname, amount, adate)
+2. Branch (bname, city)
+3. Customers (cname, city)
+4. Borrow (loanno, cname, bname, amount)
+
+Queries:
+--------
+1. Display customer names whose living city is 'Bombay' and branch city is 'Nagpur'
+2. Display customer names whose living city is same as their branch city
+3. Display customer names who are both borrowers and depositors and live in 'Nagpur'
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS BankDB21;
+USE BankDB21;
+
+-- Step 2: Create tables with constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- Step 3: Insert data
+
+INSERT INTO Branch VALUES
+('SBI', 'Bombay'),
+('OBC', 'Nagpur'),
+('BOI', 'Pune'),
+('Axis', 'Nagpur');
+
+INSERT INTO Customers VALUES
+('Pranav Bhosale', 'Nagpur'),
+('Jay Rajankar', 'Bombay'),
+('Anvay Kulkarni', 'Pune'),
+('Krishna Gandhi', 'Nagpur'),
+('Gaurav Kaushalye', 'Bombay');
+
+INSERT INTO Deposit VALUES
+(301, 'Pranav Bhosale', 'OBC', 10000.00, '2024-01-01'),
+(302, 'Jay Rajankar', 'OBC', 15000.00, '2024-02-01'),
+(303, 'Anvay Kulkarni', 'BOI', 12000.00, '2024-03-01'),
+(304, 'Krishna Gandhi', 'Axis', 16000.00, '2024-04-01'),
+(305, 'Gaurav Kaushalye', 'SBI', 18000.00, '2024-05-01');
+
+INSERT INTO Borrow VALUES
+(401, 'Pranav Bhosale', 'OBC', 25000.00),
+(402, 'Jay Rajankar', 'Axis', 27000.00),
+(403, 'Anvay Kulkarni', 'BOI', 23000.00),
+(404, 'Krishna Gandhi', 'OBC', 30000.00),
+(405, 'Gaurav Kaushalye', 'SBI', 19000.00);
+
+-- Step 4: Queries
+
+-- 1. Customer names where living city = 'Bombay' and branch city = 'Nagpur'
+SELECT DISTINCT d.cname
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = 'Bombay' AND b.city = 'Nagpur';
+
+-- 2. Customer names where living city = branch city
+SELECT DISTINCT d.cname
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = b.city;
+
+-- 3. Customer names who are borrowers AND depositors and live in Nagpur
+SELECT DISTINCT c.cname
+FROM Customers c
+JOIN Deposit d ON c.cname = d.cname
+JOIN Borrow b ON c.cname = b.cname
+WHERE c.city = 'Nagpur';
+
+
+Below is the solution for the SQL task based on the provided task from "Tables 21 - BANK Bombay Nagpur.txt". It includes the creation of the database and tables (Deposit, Branch, Customers, Borrow) with appropriate primary and foreign key constraints, insertion of sample data, and execution of the specified queries to retrieve banking information. The solution uses proper SQL syntax, provides a detailed explanation of the syntax used, and explains the logic behind each operation. The code is wrapped in an artifact tag as per the guidelines, with the content type set to text/sql for SQL.
+
+The task requires:
+
+Creating a database BankDB21 and four tables with constraints:
+Deposit (actno, cname, bname, amount, adate)
+Branch (bname, city)
+Customers (cname, city)
+Borrow (loanno, cname, bname, amount)
+Inserting sample data into all tables.
+Writing three queries:
+Display customer names whose living city is 'Bombay' and branch city is 'Nagpur'.
+Display customer names whose living city is the same as their branch city.
+Display customer names who are both borrowers and depositors and live in 'Nagpur'.
+SQL Bank Bombay Nagpur
+sql
+Show inline
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS BankDB21;
+USE BankDB21;
+Purpose: Creates the BankDB21 database if it doesn’t exist and switches to it for subsequent operations.
+Table Creation with Constraints:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], ... , [FOREIGN KEY (<column>) REFERENCES <table>(<column>)] );
+Example:
+sql
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+Purpose: Creates tables with:
+Primary keys (bname for Branch, cname for Customers, actno for Deposit, loanno for Borrow) to ensure uniqueness.
+Foreign keys in Deposit and Borrow linking to Customers.cname and Branch.bname for referential integrity.
+NOT NULL for required fields and DECIMAL(10,2) for precise monetary amounts.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... ), ...;
+Example:
+sql
+
+INSERT INTO Branch VALUES
+('SBI', 'Bombay'),
+...
+Purpose: Populates tables with sample data, ensuring foreign key constraints are satisfied (e.g., cname and bname exist in Customers and Branch).
+Queries:
+Query 1: Customers with Living City 'Bombay' and Branch City 'Nagpur':
+Syntax: SELECT DISTINCT <column> FROM <table1> JOIN <table2> ON <condition> JOIN <table3> ON <condition> WHERE <conditions>;
+Example:
+sql
+
+SELECT DISTINCT d.cname
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = 'Bombay' AND b.city = 'Nagpur';
+Purpose: Finds customers living in Bombay with deposits at Nagpur branches.
+Query 2: Customers with Same Living and Branch City:
+Syntax: SELECT DISTINCT <column> FROM <table1> JOIN <table2> ON <condition> JOIN <table3> ON <condition> WHERE <condition>;
+Example:
+sql
+
+SELECT DISTINCT d.cname
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = b.city;
+Purpose: Identifies customers whose living city matches their deposit branch city.
+Query 3: Borrowers and Depositors in Nagpur:
+Syntax: SELECT DISTINCT <column> FROM <table1> JOIN <table2> ON <condition> JOIN <table3> ON <condition> WHERE <condition>;
+Example:
+sql
+
+SELECT DISTINCT c.cname
+FROM Customers c
+JOIN Deposit d ON c.cname = d.cname
+JOIN Borrow b ON c.cname = b.cname
+WHERE c.city = 'Nagpur';
+Purpose: Finds customers in Nagpur who are both depositors and borrowers.
+Explanation of Logic
+Database and Table Setup:
+The BankDB21 database is created.
+Tables are defined with primary keys for uniqueness and foreign keys to enforce referential integrity.
+Branch and Customers are created first to satisfy foreign key dependencies in Deposit and Borrow.
+Sample Data:
+Branch: Four branches in Bombay, Nagpur, and Pune.
+Customers: Five customers in Nagpur, Bombay, and Pune.
+Deposit: Five deposit records with amounts and 2024 dates.
+Borrow: Five loan records linked to branches and customers.
+Queries:
+Query 1: Joins Deposit, Customers, and Branch to find customers living in Bombay (Jay Rajankar, Gaurav Kaushalye) with deposits at Nagpur branches (OBC or Axis). Result: Jay Rajankar (deposit at OBC, Nagpur).
+Query 2: Joins Deposit, Customers, and Branch to find customers where living city equals branch city. Results: Pranav Bhosale (Nagpur, OBC), Krishna Gandhi (Nagpur, Axis), Anvay Kulkarni (Pune, BOI), Gaurav Kaushalye (Bombay, SBI).
+Query 3: Joins Customers, Deposit, and Borrow to find Nagpur customers who are both depositors and borrowers. Results: Pranav Bhosale and Krishna Gandhi (both have deposits and loans in Nagpur).
+Efficiency: Primary and foreign keys ensure efficient joins. DISTINCT prevents duplicate customer names. Queries use minimal joins, optimized for the small dataset.
+Why This Solution Satisfies the Problem
+Correct Syntax: Uses standard SQL syntax for database creation, table setup with constraints, data insertion, and query execution.
+Schema Adherence: Tables (Branch, Customers, Deposit, Borrow) match the specified schema with proper primary and foreign key constraints.
+Query Accuracy:
+Query 1 correctly identifies Bombay residents with Nagpur branch deposits.
+Query 2 finds customers with matching living and branch cities.
+Query 3 identifies Nagpur customers who are both depositors and borrowers.
+Theory Alignment: Demonstrates relational database principles (keys, joins, relational queries) for banking data management.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, and query execution.
+Enhanced Output: Retains the original logic and data, ensuring clear and accurate query results.

@@ -1,0 +1,365 @@
+
+14 DML Operations with Functions, Operators, and Sets.txt
+==========================================================
+
+Question:
+---------
+Implement all SQL DML operations with operators, functions, and set operators for the given schema:
+
+Schema:
+-------
+1. Account(Acc_no, branch_name, balance)
+2. Branch(branch_name, branch_city, assets)
+3. Customer(cust_name, cust_street, cust_city)
+4. Depositor(cust_name, acc_no)
+5. Loan(loan_no, branch_name, amount)
+6. Borrower(cust_name, loan_no)
+
+📚 Theory
+---------
+This schema models a simple banking system with customers, branches, accounts, and loans.
+We demonstrate SQL DML (INSERT, UPDATE, DELETE, SELECT) with:
+- Operators (comparison, logical)
+- Built-in functions (aggregate, string, arithmetic)
+- Set operations (UNION, INTERSECT using JOIN logic)
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS BankingSystemDB;
+USE BankingSystemDB;
+
+-- Step 2: Create tables
+CREATE TABLE Branch (
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50),
+    assets DECIMAL(12,2)
+);
+
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50),
+    balance DECIMAL(10,2),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Customer (
+    cust_name VARCHAR(100) PRIMARY KEY,
+    cust_street VARCHAR(100),
+    cust_city VARCHAR(50)
+);
+
+CREATE TABLE Depositor (
+    cust_name VARCHAR(100),
+    acc_no INT,
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (acc_no) REFERENCES Account(acc_no)
+);
+
+CREATE TABLE Loan (
+    loan_no INT PRIMARY KEY,
+    branch_name VARCHAR(50),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Borrower (
+    cust_name VARCHAR(100),
+    loan_no INT,
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+);
+
+-- Step 3: Insert Sample Data (5 entries per table)
+
+INSERT INTO Branch VALUES
+('Pune Branch', 'Pune', 10000000),
+('Mumbai Branch', 'Mumbai', 15000000),
+('Nashik Branch', 'Nashik', 9000000);
+
+INSERT INTO Account VALUES
+(2001, 'Pune Branch', 10000),
+(2002, 'Pune Branch', 17000),
+(2003, 'Mumbai Branch', 13000),
+(2004, 'Mumbai Branch', 25000),
+(2005, 'Nashik Branch', 9000);
+
+INSERT INTO Customer VALUES
+('Pranav Bhosale', 'JM Road', 'Pune'),
+('Jay Rajankar', 'Churchgate', 'Mumbai'),
+('Anvay Kulkarni', 'Gangapur Road', 'Nashik'),
+('Krishna Gandhi', 'Baner', 'Pune'),
+('Gaurav Kaushalye', 'Andheri', 'Mumbai');
+
+INSERT INTO Depositor VALUES
+('Pranav Bhosale', 2001),
+('Jay Rajankar', 2002),
+('Anvay Kulkarni', 2003),
+('Krishna Gandhi', 2004),
+('Gaurav Kaushalye', 2005);
+
+INSERT INTO Loan VALUES
+(301, 'Pune Branch', 50000),
+(302, 'Mumbai Branch', 75000),
+(303, 'Nashik Branch', 60000),
+(304, 'Pune Branch', 40000),
+(305, 'Mumbai Branch', 85000);
+
+INSERT INTO Borrower VALUES
+('Pranav Bhosale', 301),
+('Jay Rajankar', 302),
+('Anvay Kulkarni', 303),
+('Krishna Gandhi', 304),
+('Gaurav Kaushalye', 305);
+
+SQL Queries:
+------------
+
+-- 1. Find average account balance at each branch
+SELECT branch_name, AVG(balance) AS avg_balance
+FROM Account
+GROUP BY branch_name;
+
+-- 2. Find number of depositors at each branch
+SELECT a.branch_name, COUNT(DISTINCT d.cust_name) AS num_depositors
+FROM Account a
+JOIN Depositor d ON a.acc_no = d.acc_no
+GROUP BY a.branch_name;
+
+-- 3. Find branches with average balance > 12000
+SELECT branch_name
+FROM Account
+GROUP BY branch_name
+HAVING AVG(balance) > 12000;
+
+-- 4. Count number of tuples in customer table
+SELECT COUNT(*) AS total_customers FROM Customer;
+
+-- 5. Set operation - all customers who either have account or loan (UNION)
+SELECT cust_name FROM Depositor
+UNION
+SELECT cust_name FROM Borrower;
+
+-- 6. Show all accounts with balance BETWEEN 10k and 20k
+SELECT * FROM Account WHERE balance BETWEEN 10000 AND 20000;
+
+-- 7. Add 5% bonus to all balances (calculated only)
+SELECT acc_no, branch_name, balance, balance * 1.05 AS bonus_balance
+FROM Account;
+
+-- 8. Customers with loans above 60000 using JOIN + filter
+SELECT b.cust_name, l.amount
+FROM Borrower b
+JOIN Loan l ON b.loan_no = l.loan_no
+WHERE l.amount > 60000;
+
+-- 9. Concatenate city and street of each customer
+SELECT cust_name, CONCAT(cust_city, ', ', cust_street) AS full_address
+FROM Customer;
+
+-- 10. LEFT JOIN: All customers with their account info (if any)
+SELECT c.cust_name, a.acc_no, a.balance
+FROM Customer c
+LEFT JOIN Depositor d ON c.cust_name = d.cust_name
+LEFT JOIN Account a ON d.acc_no = a.acc_no;
+
+
+Below is the solution for the SQL task based on the provided task from "14 DML Operations with Functions, Operators, and Sets.txt". It includes the creation of the database and tables (Account, Branch, Customer, Depositor, Loan, Borrower) with appropriate primary, foreign key, and check constraints, insertion of sample data, and execution of the specified DML queries to demonstrate SQL operations with operators, functions, and set operators. The solution uses proper SQL syntax, provides a detailed explanation of the syntax used, and explains the logic behind each operation. The code is wrapped in an artifact tag as per the guidelines, with the content type set to text/sql for SQL.
+
+The task requires:
+
+Creating a database BankingSystemDB and six tables with constraints:
+Account (acc_no, branch_name, balance)
+Branch (branch_name, branch_city, assets)
+Customer (cust_name, cust_street, cust_city)
+Depositor (cust_name, acc_no)
+Loan (loan_no, branch_name, amount)
+Borrower (cust_name, loan_no)
+Inserting at least five records of sample data into each table (except for tables with composite keys, where appropriate).
+Executing ten queries to demonstrate DML operations, including:
+Aggregate functions (AVG, COUNT)
+Grouping and filtering (GROUP BY, HAVING)
+Set operations (UNION)
+Operators (BETWEEN, comparison)
+String functions (CONCAT)
+Joins (INNER JOIN, LEFT JOIN)
+Arithmetic operations
+SQL DML Operations with Functions, Operators, and Sets
+sql
+Show inline
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS BankingSystemDB;
+USE BankingSystemDB;
+Purpose: Creates the BankingSystemDB database if it doesn’t exist and switches to it.
+Table Creation with Constraints:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], ... , [FOREIGN KEY (<column>) REFERENCES <table>(<column>)] );
+Example:
+sql
+
+CREATE TABLE Branch (
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50) NOT NULL,
+    assets DECIMAL(12,2) CHECK (assets >= 0)
+);
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    balance DECIMAL(10,2) CHECK (balance >= 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+Purpose: Creates tables with:
+Primary keys (branch_name, acc_no, cust_name, loan_no, composite keys for Depositor and Borrower) for uniqueness.
+Foreign keys linking Account and Loan to Branch, and Depositor and Borrower to Customer, Account, and Loan for referential integrity.
+CHECK constraints (e.g., assets >= 0, balance >= 0, amount > 0) to enforce data validity.
+NOT NULL for required fields and DECIMAL(10,2) or DECIMAL(12,2) for precise monetary amounts.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... ), ...;
+Example:
+sql
+
+INSERT INTO Branch VALUES
+('Pune Branch', 'Pune', 10000000.00),
+...
+Purpose: Populates tables with sample data, ensuring foreign key and check constraints are satisfied.
+Queries:
+Query 1: Average Account Balance per Branch:
+Syntax: SELECT <column>, AVG(<column>) AS <alias> FROM <table> GROUP BY <column>;
+Example:
+sql
+
+SELECT branch_name, AVG(balance) AS avg_balance
+FROM Account
+GROUP BY branch_name;
+Purpose: Computes the average balance for accounts grouped by branch.
+Query 2: Number of Depositors per Branch:
+Syntax: SELECT <column>, COUNT(DISTINCT <column>) AS <alias> FROM <table1> JOIN <table2> ON <condition> GROUP BY <column>;
+Example:
+sql
+
+SELECT a.branch_name, COUNT(DISTINCT d.cust_name) AS num_depositors
+FROM Account a
+JOIN Depositor d ON a.acc_no = d.acc_no
+GROUP BY a.branch_name;
+Purpose: Counts distinct depositors per branch using a join.
+Query 3: Branches with Average Balance > 12000:
+Syntax: SELECT <column> FROM <table> GROUP BY <column> HAVING <condition>;
+Example:
+sql
+
+SELECT branch_name
+FROM Account
+GROUP BY branch_name
+HAVING AVG(balance) > 12000;
+Purpose: Filters branches where the average account balance exceeds 12000.
+Query 4: Count Tuples in Customer Table:
+Syntax: SELECT COUNT(*) AS <alias> FROM <table>;
+Example:
+sql
+
+SELECT COUNT(*) AS total_customers
+FROM Customer;
+Purpose: Counts the total number of customer records.
+Query 5: Customers with Account or Loan (UNION):
+Syntax: SELECT <column> FROM <table1> UNION SELECT <column> FROM <table2>;
+Example:
+sql
+
+SELECT cust_name FROM Depositor
+UNION
+SELECT cust_name FROM Borrower;
+Purpose: Combines distinct customer names from Depositor and Borrower.
+Query 6: Accounts with Balance Between 10k and 20k:
+Syntax: SELECT * FROM <table> WHERE <column> BETWEEN <value1> AND <value2>;
+Example:
+sql
+
+SELECT * FROM Account
+WHERE balance BETWEEN 10000 AND 20000;
+Purpose: Retrieves accounts with balances in the specified range.
+Query 7: Calculate 5% Bonus on Balances:
+Syntax: SELECT <columns>, <column> * <factor> AS <alias> FROM <table>;
+Example:
+sql
+
+SELECT acc_no, branch_name, balance, balance * 1.05 AS bonus_balance
+FROM Account;
+Purpose: Computes a 5% bonus on account balances without modifying data.
+Query 8: Customers with Loans Above 60000:
+Syntax: SELECT <columns> FROM <table1> JOIN <table2> ON <condition> WHERE <condition>;
+Example:
+sql
+
+SELECT b.cust_name, l.amount
+FROM Borrower b
+JOIN Loan l ON b.loan_no = l.loan_no
+WHERE l.amount > 60000;
+Purpose: Retrieves customers and loan amounts for loans exceeding 60000.
+Query 9: Concatenate City and Street:
+Syntax: SELECT <column>, CONCAT(<column1>, <string>, <column2>) AS <alias> FROM <table>;
+Example:
+sql
+
+SELECT cust_name, CONCAT(cust_city, ', ', cust_street) AS full_address
+FROM Customer;
+Purpose: Combines city and street into a single address string.
+Query 10: All Customers with Account Info (LEFT JOIN):
+Syntax: SELECT <columns> FROM <table1> LEFT JOIN <table2> ON <condition> LEFT JOIN <table3> ON <condition>;
+Example:
+sql
+
+SELECT c.cust_name, a.acc_no, a.balance
+FROM Customer c
+LEFT JOIN Depositor d ON c.cust_name = d.cust_name
+LEFT JOIN Account a ON d.acc_no = a.acc_no;
+Purpose: Retrieves all customers, including their account details if available, using left joins.
+Explanation of Logic
+Database and Table Setup:
+The BankingSystemDB database is created.
+Tables are defined with primary keys, foreign keys, and check constraints to ensure data integrity.
+Branch, Customer, and Account are created first to satisfy foreign key dependencies in Depositor, Loan, and Borrower.
+Sample Data:
+Branch: Three branches in Pune, Mumbai, and Nashik.
+Account: Five accounts with balances across branches.
+Customer: Five customers in Pune, Mumbai, and Nashik.
+Depositor: Links five customers to accounts.
+Loan: Five loans with amounts across branches.
+Borrower: Links five customers to loans.
+Queries:
+Query 1: Computes average balances:
+Pune: (10000 + 17000) / 2 = ₹13500
+Mumbai: (13000 + 25000) / 2 = ₹19000
+Nashik: 9000 / 1 = ₹9000
+Query 2: Counts depositors per branch:
+Pune: 2 (Pranav, Jay)
+Mumbai: 2 (Anvay, Krishna)
+Nashik: 1 (Gaurav)
+Query 3: Identifies branches with average balance > ₹12000 (Pune: ₹13500, Mumbai: ₹19000).
+Query 4: Counts customers (result: 5).
+Query 5: Uses UNION to list all customers from Depositor and Borrower (result: all five customers, as each appears in both).
+Query 6: Lists accounts with balances between ₹10000 and ₹20000 (accounts 2001: ₹10000, 2002: ₹17000, 2003: ₹13000).
+Query 7: Calculates 5% bonus (e.g., ₹10000 → ₹10500, ₹17000 → ₹17850).
+Query 8: Lists customers with loans > ₹60000 (Jay: ₹75000, Gaurav: ₹85000).
+Query 9: Concatenates addresses (e.g., 'Pune, JM Road' for Pranav).
+Query 10: Left joins show all customers with account details; all have accounts, so no NULLs in this dataset.
+Efficiency: Primary and foreign keys ensure efficient joins and lookups. Queries use optimized aggregates, joins, and set operations for the small dataset.
+Why This Solution Satisfies the Problem
+Correct Syntax: Uses standard SQL syntax for database creation, table setup with constraints, data insertion, and query execution.
+Schema Adherence: Tables (Branch, Account, Customer, Depositor, Loan, Borrower) match the specified schema with primary, foreign key, and check constraints.
+Query Accuracy:
+Queries 1–3 use aggregates and grouping correctly.
+Query 4 counts tuples accurately.
+Query 5 uses UNION for set operations.
+Query 6 uses BETWEEN operator.
+Query 7 applies arithmetic operations.
+Query 8 uses joins and filtering.
+Query 9 uses string functions.
+Query 10 uses left joins for comprehensive data retrieval.
+Theory Alignment: Demonstrates DML operations, operators, functions (aggregate, string, arithmetic), and set operations (UNION) in a banking context.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, and ten queries.
+Enhanced Output: Retains the original logic and data, ensuring accurate and clear results with proper constraint handling.

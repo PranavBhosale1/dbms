@@ -1,0 +1,119 @@
+
+10 SQL Objects Borrower.txt
+============================
+
+Question:
+---------
+Implement SQL DDL statements which demonstrate the use of SQL objects such as:  
+- Table  
+- View  
+- Index  
+- Sequence  
+- Synonym  
+for the following relational schema:
+
+Borrower(Rollin, Name, DateofIssue, NameofBook, Status)
+
+📚 Theory (Detailed)
+--------------------
+
+The provided SQL code implements a Borrower database for a library system, utilizing key SQL objects. Below are the components used and their purpose:
+
+1. **Table Creation (Borrower):**
+   - Columns: Rollin, Name, DateofIssue, NameofBook, Status.
+   - Constraints: `Rollin` as `PRIMARY KEY` for uniqueness.
+   - This table stores core borrowing activity in the library.
+
+2. **View (IssuedBooks):**
+   - Created to show only active issued books (Status = 'I').
+   - Benefits: simplifies querying active loans, improves readability.
+
+3. **Index (Borrower_Name_Idx):**
+   - Created on `Name` for faster lookup by borrower's name.
+   - Indexes improve performance when filtering or joining.
+
+4. **Sequence:**
+   - MySQL uses `AUTO_INCREMENT` instead of explicit sequences.
+   - Simulated with a separate table `Borrower_Seq`.
+
+5. **Synonym:**
+   - Not supported in MySQL, so simulated using a view alias (`BorrowerSyn`).
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use the database
+CREATE DATABASE IF NOT EXISTS BorrowerDB;
+USE BorrowerDB;
+
+-- Step 2: Create Borrower table
+CREATE TABLE Borrower (
+    Rollin INT PRIMARY KEY,
+    Name VARCHAR(100),
+    DateofIssue DATE,
+    NameofBook VARCHAR(100),
+    Status CHAR(1)
+);
+
+-- Step 3: Insert sample data
+INSERT INTO Borrower VALUES
+(101, 'Pranav Bhosale', '2025-05-01', 'Data Structures', 'I'),
+(102, 'Jay Rajankar', '2025-05-05', 'Operating Systems', 'R'),
+(103, 'Anvay Kulkarni', '2025-05-03', 'DBMS', 'I');
+
+-- Step 4: Create Views
+CREATE VIEW IssuedBooks AS
+SELECT Rollin, Name, NameofBook, DateofIssue
+FROM Borrower
+WHERE Status = 'I';
+
+CREATE VIEW LibraryUsers AS
+SELECT * FROM Borrower;
+
+-- Step 5: Create Index
+CREATE INDEX idx_rollin_book ON Borrower(Rollin, NameofBook);
+
+-- Step 6: Simulate Sequence (using AUTO_INCREMENT)
+CREATE TABLE Borrower_Seq (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    Rollin INT NOT NULL,
+    Name VARCHAR(100),
+    DateofIssue DATE,
+    NameofBook VARCHAR(100),
+    Status CHAR(1)
+);
+
+INSERT INTO Borrower_Seq (Rollin, Name, DateofIssue, NameofBook, Status) VALUES
+(104, 'Krishna Gandhi', '2025-05-06', 'Computer Networks', 'I'),
+(105, 'Gaurav Kaushalye', '2025-05-07', 'Software Engineering', 'R');
+
+-- Step 7: Simulate Synonym (as view alias in MySQL)
+CREATE VIEW BorrowerSyn AS
+SELECT * FROM Borrower;
+
+Validation Queries:
+--------------------
+-- Base table
+SELECT * FROM Borrower;
+
+-- View showing only issued books
+SELECT * FROM IssuedBooks;
+
+-- View showing all users
+SELECT * FROM LibraryUsers;
+
+-- Sequence-simulated table
+SELECT * FROM Borrower_Seq;
+
+-- Simulated synonym
+SELECT * FROM BorrowerSyn;
+
+✅ Summary:
+-----------
+This implementation covers all required SQL objects:
+
+- ✅ Table (Borrower)
+- ✅ Views (IssuedBooks, LibraryUsers)
+- ✅ Index (on Rollin and NameofBook)
+- ✅ Sequence (using AUTO_INCREMENT in Borrower_Seq)
+- ✅ Synonym (simulated using view alias)

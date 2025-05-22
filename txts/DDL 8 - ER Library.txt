@@ -1,0 +1,134 @@
+
+8 Library ER.txt
+=================
+
+Question:
+---------
+Draw ER for Library database with at least 5 entities and convert them into tables.  
+Perform DDL on the converted tables:
+1. Create tables with all constraints (Based on ERD cardinalities)  
+2. Create views on any two tables using join condition  
+3. Create index called Lib_Index1 (ascending order by Author name)  
+4. Create sequence on Bookid
+
+Theory:
+-------
+Entities:
+1. Book (bookid, title, author, publisherid, price)  
+2. Publisher (publisherid, name, city)  
+3. Member (memberid, name, address, phone)  
+4. Borrow (borrowid, memberid, bookid, borrowdate, returndate)  
+5. Staff (staffid, name, designation)
+
+Relationships:
+- Book is published by Publisher (many-to-one)  
+- Members can borrow many Books (many-to-many via Borrow)  
+- Borrow is managed by Staff (many-to-one)
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use LibraryDB
+CREATE DATABASE IF NOT EXISTS LibraryDBv2;
+USE LibraryDBv2;
+
+-- Step 2: Create tables with constraints
+CREATE TABLE Publisher (
+    publisherid INT PRIMARY KEY,
+    name VARCHAR(100),
+    city VARCHAR(50)
+);
+
+CREATE TABLE Book (
+    bookid INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(100),
+    author VARCHAR(100),
+    publisherid INT,
+    price DECIMAL(8,2),
+    FOREIGN KEY (publisherid) REFERENCES Publisher(publisherid)
+);
+
+CREATE TABLE Member (
+    memberid INT PRIMARY KEY,
+    name VARCHAR(100),
+    address VARCHAR(200),
+    phone VARCHAR(15)
+);
+
+CREATE TABLE Staff (
+    staffid INT PRIMARY KEY,
+    name VARCHAR(100),
+    designation VARCHAR(50)
+);
+
+CREATE TABLE Borrow (
+    borrowid INT PRIMARY KEY,
+    memberid INT,
+    bookid INT,
+    staffid INT,
+    borrowdate DATE,
+    returndate DATE,
+    FOREIGN KEY (memberid) REFERENCES Member(memberid),
+    FOREIGN KEY (bookid) REFERENCES Book(bookid),
+    FOREIGN KEY (staffid) REFERENCES Staff(staffid)
+);
+
+-- Step 3: Insert sample values
+INSERT INTO Publisher VALUES
+(1, 'Penguin Books', 'Delhi'),
+(2, 'HarperCollins', 'Mumbai'),
+(3, 'Scholastic', 'Pune');
+
+INSERT INTO Book (title, author, publisherid, price) VALUES
+('The Alchemist', 'Paulo Coelho', 1, 350.00),
+('Inferno', 'Dan Brown', 2, 450.00),
+('Harry Potter', 'J.K. Rowling', 3, 550.00),
+('Digital Fortress', 'Dan Brown', 2, 300.00),
+('Wings of Fire', 'A.P.J. Abdul Kalam', 1, 280.00);
+
+INSERT INTO Member VALUES
+(101, 'Pranav Bhosale', 'Pune', '9988776655'),
+(102, 'Jay Rajankar', 'Mumbai', '9977665544');
+
+INSERT INTO Staff VALUES
+(1, 'Krishna Gandhi', 'Librarian'),
+(2, 'Gaurav Kaushalye', 'Assistant');
+
+INSERT INTO Borrow VALUES
+(201, 101, 1, 1, '2024-01-10', '2024-01-20'),
+(202, 102, 2, 2, '2024-02-05', '2024-02-15');
+
+-- Step 4: Create views using JOIN
+CREATE VIEW Book_Publisher_View AS
+SELECT b.title, b.author, p.name AS publisher_name
+FROM Book b
+JOIN Publisher p ON b.publisherid = p.publisherid;
+
+CREATE VIEW Member_Borrow_View AS
+SELECT m.name AS member_name, b.title, br.borrowdate, br.returndate
+FROM Member m
+JOIN Borrow br ON m.memberid = br.memberid
+JOIN Book b ON br.bookid = b.bookid;
+
+-- Step 5: Create index
+CREATE INDEX Lib_Index1 ON Book(author ASC);
+
+-- Step 6: AUTO_INCREMENT handles Bookid sequence
+-- To check the next Bookid value:
+SELECT AUTO_INCREMENT
+FROM information_schema.tables
+WHERE table_name = 'Book' AND table_schema = 'LibraryDBv2';
+
+Validation Queries:
+-------------------
+-- View data from views
+SELECT * FROM Book_Publisher_View;
+SELECT * FROM Member_Borrow_View;
+
+-- Check index on author
+EXPLAIN SELECT * FROM Book WHERE author = 'Dan Brown';
+
+-- Confirm next value of sequence (AUTO_INCREMENT)
+SELECT AUTO_INCREMENT 
+FROM information_schema.tables 
+WHERE table_name = 'Book' AND table_schema = 'LibraryDBv2';

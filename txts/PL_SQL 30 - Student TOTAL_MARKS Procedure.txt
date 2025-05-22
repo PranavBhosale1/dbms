@@ -1,0 +1,252 @@
+
+PLSQL 30 - Student Grade Classification.txt
+===========================================
+
+Question:
+---------
+Write a stored procedure named `proc_Grade` for categorizing students based on total marks.
+If:
+- marks <=1500 and >=990 → 'Distinction'
+- marks between 989 and 900 → 'First Class'
+- marks between 899 and 825 → 'Higher Second Class'
+
+Schema:
+-------
+1. Stud_Marks(name, total_marks)
+2. Result(roll INT AUTO_INCREMENT, name, class)
+
+SQL + PL/SQL Implementation:
+----------------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS StudentDB30;
+USE StudentDB30;
+
+-- Step 2: Create input and result tables
+
+CREATE TABLE Stud_Marks (
+    name VARCHAR(50),
+    total_marks INT
+);
+
+CREATE TABLE Result (
+    roll INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50),
+    class VARCHAR(30)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO Stud_Marks VALUES
+('Pranav Bhosale', 1200),
+('Jay Rajankar', 980),
+('Anvay Kulkarni', 910),
+('Krishna Gandhi', 850),
+('Gaurav Kaushalye', 800),
+('Sunil Patil', 1490),
+('Anita Desai', 875),
+('Swapnil More', 930);
+
+-- Step 4: Stored Procedure
+
+DELIMITER $$
+
+CREATE PROCEDURE proc_Grade()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE sname VARCHAR(50);
+    DECLARE marks INT;
+    DECLARE class_type VARCHAR(30);
+
+    DECLARE cur CURSOR FOR SELECT name, total_marks FROM Stud_Marks;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO sname, marks;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        IF marks BETWEEN 990 AND 1500 THEN
+            SET class_type = 'Distinction';
+        ELSEIF marks BETWEEN 900 AND 989 THEN
+            SET class_type = 'First Class';
+        ELSEIF marks BETWEEN 825 AND 899 THEN
+            SET class_type = 'Higher Second Class';
+        ELSE
+            SET class_type = 'Fail';
+        END IF;
+
+        INSERT INTO Result(name, class) VALUES (sname, class_type);
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+
+-- Step 5: Execute procedure
+CALL proc_Grade();
+
+-- Step 6: View result
+SELECT * FROM Result;
+
+
+
+
+Below is the solution for the PL/SQL task based on the provided task from "PLSQL 30 - Student Grade Classification.txt". It includes the creation of the database and tables, a stored procedure to categorize students based on total marks, insertion of sample data, execution of the procedure, and a query to view the results. The solution uses proper PL/SQL syntax, provides a detailed explanation of the syntax used, and explains the logic behind each operation. The code is wrapped in an artifact tag as per the guidelines, with the content type set to text/sql for PL/SQL.
+
+The task requires:
+
+Creating a database StudentDB30 and tables Stud_Marks (with fields name, total_marks) and Result (with fields roll, name, class).
+Writing a stored procedure proc_Grade to categorize students based on total marks:
+Marks ≤1500 and ≥990: 'Distinction'
+Marks between 989 and 900: 'First Class'
+Marks between 899 and 825: 'Higher Second Class'
+(Implied) Marks <825: 'Fail'
+Inserting sample data and executing the procedure to populate the Result table.
+PLSQL Student Grade Classification
+sql
+Show inline
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS StudentDB30;
+USE StudentDB30;
+Purpose: Creates the StudentDB30 database if it doesn’t exist and switches to it for subsequent operations.
+Table Creation:
+Syntax: CREATE TABLE <table_name> ( <column1> <type>, <column2> <type>, ... );
+Examples:
+sql
+
+CREATE TABLE Stud_Marks (
+    name VARCHAR(50),
+    total_marks INT
+);
+CREATE TABLE Result (
+    roll INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50),
+    class VARCHAR(30)
+);
+Purpose: Creates Stud_Marks for storing student names and total marks, and Result for storing roll numbers (auto-incremented), names, and class categories. AUTO_INCREMENT automatically generates unique roll values, and PRIMARY KEY ensures uniqueness.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2> ), ...;
+Example:
+sql
+
+INSERT INTO Stud_Marks VALUES
+('Pranav Bhosale', 1200),
+('Jay Rajankar', 980),
+...
+Purpose: Populates Stud_Marks with sample data for eight students.
+Stored Procedure:
+Syntax:
+sql
+
+DELIMITER $$
+CREATE PROCEDURE <procedure_name>()
+BEGIN
+    DECLARE <variable> <type> [DEFAULT <value>];
+    DECLARE <cursor_name> CURSOR FOR <SELECT_statement>;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET <variable> = <value>;
+    OPEN <cursor_name>;
+    <loop_label>: LOOP
+        FETCH <cursor_name> INTO <variables>;
+        IF <condition> THEN
+            LEAVE <loop_label>;
+        END IF;
+        <logic>;
+    END LOOP;
+    CLOSE <cursor_name>;
+END$$
+DELIMITER ;
+**pit
+sql
+
+DELIMITER $$
+
+CREATE PROCEDURE proc_Grade()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE sname VARCHAR(50);
+    DECLARE marks INT;
+    DECLARE class_type VARCHAR(30);
+
+    DECLARE cur CURSOR FOR SELECT name, total_marks FROM Stud_Marks;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO sname, marks;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        IF marks BETWEEN 990 AND 1500 THEN
+            SET class_type = 'Distinction';
+        ELSEIF marks BETWEEN 900 AND 989 THEN
+            SET class_type = 'First Class';
+        ELSEIF marks BETWEEN 825 AND 899 THEN
+            SET class_type = 'Higher Second Class';
+        ELSE
+            SET class_type = 'Fail';
+        END IF;
+
+        INSERT INTO Result(name, class) VALUES (sname, class_type);
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+Components:
+DELIMITER $$: Changes the statement delimiter to $$ to allow semicolons within the procedure.
+DECLARE: Defines variables (done, sname, marks, class_type) and a cursor cur to select data from Stud_Marks.
+CONTINUE HANDLER FOR NOT FOUND: Sets done = 1 when the cursor has no more rows.
+OPEN cur, FETCH, CLOSE cur: Manages cursor operations to iterate through Stud_Marks.
+IF ... ELSEIF ... ELSE: Applies grading logic based on mark ranges.
+INSERT INTO Result: Inserts the student’s name and computed class into the Result table.
+Purpose: Processes each student’s marks, assigns a grade, and stores the result.
+Execute Procedure:
+Syntax: CALL <procedure_name>();
+Example: CALL proc_Grade();
+Purpose: Runs the stored procedure to process Stud_Marks data and populate Result.
+View Results:
+Syntax: SELECT * FROM <table_name>;
+Example: SELECT * FROM Result;
+Purpose: Retrieves all rows from the Result table to display the output.
+Explanation of Logic
+Database and Table Setup: The StudentDB30 database is created, and two tables are defined:
+Stud_Marks: Stores student names and total marks.
+Result: Stores auto-generated roll numbers, names, and class categories.
+Sample Data: Eight student records are inserted into Stud_Marks with varying marks to test all grading conditions.
+Stored Procedure (proc_Grade):
+A cursor (cur) retrieves each student’s name and total_marks from Stud_Marks.
+The loop iterates through each row, fetching data into sname and marks.
+Conditional logic (IF ... ELSEIF ... ELSE) categorizes marks:
+990–1500: 'Distinction'
+900–989: 'First Class'
+825–891: 'Higher Second Class'
+<825: 'Fail'
+Each student’s name and computed class are inserted into Result.
+The loop exits when no more rows are found (done = 1).
+Execution and Output: The procedure is called with CALL proc_Grade(), and SELECT * FROM Result displays the results, including auto-generated roll numbers, names, and class categories.
+Efficiency: The cursor-based approach processes rows sequentially, suitable for small datasets. The AUTO_INCREMENT field ensures unique roll numbers without manual intervention.
+Why This Solution Satisfies the Problem
+Correct Syntax: The code uses standard SQL and PL/SQL syntax for database creation, table setup, data insertion, stored procedure definition, and execution.
+Schema Adherence: The Stud_Marks and Result tables match the specified schema, with roll in Result using AUTO_INCREMENT for unique identifiers.
+Grading Logic: The stored procedure accurately implements the grading rules:
+Marks ≤1500 and ≥990: 'Distinction'
+Marks 900–989: 'First Class'
+Marks 825–899: 'Higher Second Class'
+Marks <825: 'Fail' (added to handle cases outside the specified ranges).
+Theory Alignment: The solution uses PL/SQL’s procedural capabilities (cursors, loops, conditionals) to implement complex business logic for grade classification, aligning with the theory of PL/SQL as Oracle’s procedural extension to SQL.
+Complete Implementation: The solution includes all steps—database creation, table setup, data insertion, procedure execution, and result display—ensuring a fully functional program.
+Enhanced Output: The Result table’s AUTO_INCREMENT roll number and the inclusion of a 'Fail' category for marks <825 improve the robustness of the original code.

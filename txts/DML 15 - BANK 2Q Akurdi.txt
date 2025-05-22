@@ -1,0 +1,234 @@
+
+15 BANK AKURDI DML.txt
+=======================
+
+Question:
+---------
+Implement all SQL DML operations with operators, functions, and set operators for the following schema:
+Create tables with appropriate constraints like primary key, foreign key, check constraints, not null, etc.
+
+Schema:
+-------
+1. Account(Acc_no, branch_name, balance)
+2. Branch(branch_name, branch_city, assets)
+3. Customer(cust_name, cust_street, cust_city)
+4. Depositor(cust_name, acc_no)
+5. Loan(loan_no, branch_name, amount)
+6. Borrower(cust_name, loan_no)
+
+Queries to be solved:
+---------------------
+1. Find the names of all branches in loan relation.
+2. Find all loan numbers for loans made at Akurdi Branch with loan amount > 12000.
+3. Find all customers who have a loan from bank.
+   → Display their names, loan_no and loan amount.
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS AkurdiBankDB;
+USE AkurdiBankDB;
+
+-- Step 2: Create tables with constraints
+
+CREATE TABLE Branch (
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50) NOT NULL,
+    assets DECIMAL(12,2) CHECK (assets >= 0)
+);
+
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    balance DECIMAL(10,2) CHECK (balance >= 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Customer (
+    cust_name VARCHAR(100) PRIMARY KEY,
+    cust_street VARCHAR(100) NOT NULL,
+    cust_city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Depositor (
+    cust_name VARCHAR(100),
+    acc_no INT,
+    PRIMARY KEY (cust_name, acc_no),
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (acc_no) REFERENCES Account(acc_no)
+);
+
+CREATE TABLE Loan (
+    loan_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    amount DECIMAL(10,2) CHECK (amount > 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Borrower (
+    cust_name VARCHAR(100),
+    loan_no INT,
+    PRIMARY KEY (cust_name, loan_no),
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+);
+
+-- Step 3: Insert sample data (at least 5 records)
+
+INSERT INTO Branch VALUES
+('Akurdi Branch', 'Pune', 8000000),
+('Wakad Branch', 'Pune', 10000000),
+('Kothrud Branch', 'Pune', 9000000);
+
+INSERT INTO Account VALUES
+(101, 'Akurdi Branch', 12000),
+(102, 'Wakad Branch', 15000),
+(103, 'Kothrud Branch', 20000),
+(104, 'Akurdi Branch', 18000),
+(105, 'Wakad Branch', 10000);
+
+INSERT INTO Customer VALUES
+('Pranav Bhosale', 'Nigdi', 'Pune'),
+('Jay Rajankar', 'Baner', 'Pune'),
+('Anvay Kulkarni', 'Wakad', 'Pune'),
+('Krishna Gandhi', 'Kothrud', 'Pune'),
+('Gaurav Kaushalye', 'Aundh', 'Pune');
+
+INSERT INTO Depositor VALUES
+('Pranav Bhosale', 101),
+('Jay Rajankar', 102),
+('Anvay Kulkarni', 103),
+('Krishna Gandhi', 104),
+('Gaurav Kaushalye', 105);
+
+INSERT INTO Loan VALUES
+(201, 'Akurdi Branch', 25000),
+(202, 'Wakad Branch', 30000),
+(203, 'Kothrud Branch', 10000),
+(204, 'Akurdi Branch', 15000),
+(205, 'Wakad Branch', 20000);
+
+INSERT INTO Borrower VALUES
+('Pranav Bhosale', 201),
+('Jay Rajankar', 202),
+('Anvay Kulkarni', 203),
+('Krishna Gandhi', 204),
+('Gaurav Kaushalye', 205);
+
+-- Step 4: Solve Queries
+
+-- 1. Find names of all branches in loan relation
+SELECT DISTINCT branch_name
+FROM Loan;
+
+-- 2. Find loan numbers for Akurdi Branch with loan amount > 12000
+SELECT loan_no
+FROM Loan
+WHERE branch_name = 'Akurdi Branch' AND amount > 12000;
+
+-- 3. Find customers with loans: name, loan_no, amount
+SELECT b.cust_name, l.loan_no, l.amount
+FROM Borrower b
+JOIN Loan l ON b.loan_no = l.loan_no;
+
+
+
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS AkurdiBankDB;
+USE AkurdiBankDB;
+Purpose: Creates the AkurdiBankDB database if it doesn’t exist and switches to it.
+Table Creation with Constraints:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], ... , [FOREIGN KEY (<column>) REFERENCES <table>(<column>)] );
+Example:
+sql
+
+CREATE TABLE Branch (
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50) NOT NULL,
+    assets DECIMAL(12,2) CHECK (assets >= 0)
+);
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    balance DECIMAL(10,2) CHECK (balance >= 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+Purpose: Creates tables with:
+Primary keys (branch_name, acc_no, cust_name, loan_no, composite keys for Depositor and Borrower) for uniqueness.
+Foreign keys linking Account and Loan to Branch, and Depositor and Borrower to Customer, Account, and Loan for referential integrity.
+CHECK constraints (e.g., assets >= 0, amount > 0) to enforce data validity.
+NOT NULL for required fields and DECIMAL(10,2) or DECIMAL(12,2) for precise monetary amounts.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... ), ...;
+Example:
+sql
+
+INSERT INTO Branch VALUES
+('Akurdi Branch', 'Pune', 8000000.00),
+...
+Purpose: Populates tables with sample data, ensuring foreign key and check constraints are satisfied.
+Queries:
+Query 1: Names of All Branches in Loan Relation:
+Syntax: SELECT DISTINCT <column> FROM <table>;
+Example:
+sql
+
+SELECT DISTINCT branch_name
+FROM Loan;
+Purpose: Retrieves unique branch names from the Loan table.
+Query 2: Loan Numbers for Akurdi Branch with Amount > 12000:
+Syntax: SELECT <column> FROM <table> WHERE <condition> AND <condition>;
+Example:
+sql
+
+SELECT loan_no
+FROM Loan
+WHERE branch_name = 'Akurdi Branch' AND amount > 12000;
+Purpose: Finds loan numbers at Akurdi Branch with amounts exceeding 12000.
+Query 3: Customers with Loans (Name, Loan_no, Amount):
+Syntax: SELECT <columns> FROM <table1> JOIN <table2> ON <condition>;
+Example:
+sql
+
+SELECT b.cust_name, l.loan_no, l.amount
+FROM Borrower b
+JOIN Loan l ON b.loan_no = l.loan_no;
+Purpose: Joins Borrower and Loan to retrieve customer names, loan numbers, and loan amounts for all borrowers.
+Explanation of Logic
+Database and Table Setup:
+The AkurdiBankDB database is created.
+Tables are defined with primary keys, foreign keys, and check constraints to ensure data integrity.
+Branch, Customer, and Account are created first to satisfy foreign key dependencies in Depositor, Loan, and Borrower.
+Sample Data:
+Branch: Three branches in Pune (Akurdi, Wakad, Kothrud).
+Account: Five accounts with balances across branches.
+Customer: Five customers in Pune.
+Depositor: Links five customers to accounts.
+Loan: Five loans with amounts, including two at Akurdi (₹25000, ₹15000).
+Borrower: Links five customers to loans.
+Queries:
+Query 1: Retrieves distinct branch names from Loan (result: Akurdi Branch, Wakad Branch, Kothrud Branch).
+Query 2: Finds loan numbers at Akurdi Branch with amounts > ₹12000 (result: 201: ₹25000, 204: ₹15000).
+Query 3: Joins Borrower and Loan to list all borrowers with their loan details:
+Pranav Bhosale, 201, ₹25000
+Jay Rajankar, 202, ₹30000
+Anvay Kulkarni, 203, ₹10000
+Krishna Gandhi, 204, ₹15000
+Gaurav Kaushalye, 205, ₹20000
+Efficiency: Primary and foreign keys ensure efficient joins and lookups. Queries use minimal joins and conditions, optimized for the small dataset. DISTINCT in Query 1 prevents duplicate branch names.
+Why This Solution Satisfies the Problem
+Correct Syntax: Uses standard SQL syntax for database creation, table setup with constraints, data insertion, and query execution.
+Schema Adherence: Tables (Branch, Account, Customer, Depositor, Loan, Borrower) match the specified schema with primary, foreign key, and check constraints.
+Query Accuracy:
+Query 1 correctly lists all branches in the Loan relation.
+Query 2 accurately identifies Akurdi Branch loans with amounts > ₹12000.
+Query 3 correctly retrieves borrower details with loan numbers and amounts.
+Theory Alignment: Demonstrates DML operations, relational joins, and filtering in a banking context.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, and query execution.
+Enhanced Output: Retains the original logic and data, ensuring accurate and clear results with proper constraint handling.

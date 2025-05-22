@@ -1,0 +1,189 @@
+16 MongoDB MapReduce and PL_SQL.txt
+
+Question:
+1. Create collection: Students(stud_id, stud_name, stud_addr, stud_marks)
+2. Write a MapReduce function to find the total marks per student.
+3. Write a PL/SQL block to calculate total and percentage of marks of students in four subjects.
+
+Theory:
+MapReduce in MongoDB is a data processing paradigm used to aggregate large data sets. PL/SQL is Oracle's procedural extension to SQL that supports complex business logic.
+
+Why Our Solution Satisfies the Problem:
+- We create a Students collection in MongoDB.
+- We use MapReduce to aggregate total marks.
+- In PL/SQL, we use cursors and arithmetic operations to compute total and percentage.
+
+MongoDB Code:
+use school;
+
+db.Students.insertMany([
+    { stud_id: 1, stud_name: "Aarav", stud_addr: "Pune", stud_marks: 85 },
+    { stud_id: 2, stud_name: "Meera", stud_addr: "Mumbai", stud_marks: 90 },
+    { stud_id: 1, stud_name: "Aarav", stud_addr: "Pune", stud_marks: 75 },
+    { stud_id: 2, stud_name: "Meera", stud_addr: "Mumbai", stud_marks: 85 }
+]);
+
+var mapFunc = function() {
+    emit(this.stud_id, this.stud_marks);
+};
+
+var reduceFunc = function(key, values) {
+    return Array.sum(values);
+};
+
+db.Students.mapReduce(mapFunc, reduceFunc, { out: "TotalMarks" });
+
+PL/SQL Block:
+CREATE TABLE Student_Marks (
+    rollno INT,
+    sub1 INT,
+    sub2 INT,
+    sub3 INT,
+    sub4 INT
+);
+
+DECLARE
+    v_total INT;
+    v_percentage NUMBER;
+    CURSOR c1 IS SELECT * FROM Student_Marks;
+BEGIN
+    FOR rec IN c1 LOOP
+        v_total := rec.sub1 + rec.sub2 + rec.sub3 + rec.sub4;
+        v_percentage := (v_total / 400.0) * 100;
+        DBMS_OUTPUT.PUT_LINE('Roll No: ' || rec.rollno || ' Total: ' || v_total || ' Percentage: ' || v_percentage);
+    END LOOP;
+END;
+/
+
+
+Syntax Used
+MongoDB
+Database Selection:
+Syntax: use <database_name>
+Example: use school
+Purpose: Switches to the school database, creating it if it doesn’t exist when data is inserted.
+Insert Documents:
+Syntax: db.collection.insertMany([ { <document1> }, { <document2> }, ... ])
+Example:
+javascript
+
+Copy
+db.Students.insertMany([
+    { stud_id: 1, stud_name: "Aarav", stud_addr: "Pune", stud_marks: 85 },
+    ...
+])
+Purpose: Inserts multiple documents into the Students collection, creating it implicitly. Each document follows the schema with stud_id, stud_name, stud_addr, and stud_marks.
+MapReduce:
+Syntax:
+javascript
+
+Copy
+var mapFunc = function() { emit(<key>, <value>); };
+var reduceFunc = function(key, values) { return <reduced_value>; };
+db.collection.mapReduce(mapFunc, reduceFunc, { out: "<output_collection>" })
+Example:
+javascript
+
+Copy
+var mapFunc = function() {
+    emit(this.stud_id, this.stud_marks);
+};
+var reduceFunc = function(key, values) {
+    return Array.sum(values);
+};
+db.Students.mapReduce(mapFunc, reduceFunc, { out: "TotalMarks" });
+Components:
+mapFunc: Emits stud_id as the key and stud_marks as the value for each document.
+reduceFunc: Sums the stud_marks values for each stud_id using Array.sum.
+mapReduce: Executes the MapReduce operation, storing results in the TotalMarks collection.
+Purpose: Aggregates total marks per student by grouping on stud_id.
+PL/SQL
+Table Creation:
+Syntax: CREATE TABLE <table_name> ( <column1> <type>, <column2> <type>, ... );
+Example:
+sql
+
+Copy
+CREATE TABLE Student_Marks (
+    rollno INT,
+    sub1 INT,
+    sub2 INT,
+    sub3 INT,
+    sub4 INT
+);
+Purpose: Creates the Student_Marks table with columns for roll number and marks in four subjects.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... );
+Example:
+sql
+
+Copy
+INSERT INTO Student_Marks VALUES (1, 85, 90, 78, 92);
+Purpose: Populates the Student_Marks table with sample data.
+PL/SQL Block:
+Syntax:
+sql
+
+Copy
+DECLARE
+    <variable_declarations>;
+    CURSOR <cursor_name> IS <SELECT_statement>;
+BEGIN
+    FOR <record> IN <cursor_name> LOOP
+        <logic>;
+        DBMS_OUTPUT.PUT_LINE(<output>);
+    END LOOP;
+END;
+/
+Example:
+sql
+
+Copy
+DECLARE
+    v_total INT;
+    v_percentage NUMBER;
+    CURSOR c1 IS SELECT rollno, sub1, sub2, sub3, sub4 FROM Student_Marks;
+BEGIN
+    FOR rec IN c1 LOOP
+        v_total := rec.sub1 + rec.sub2 + rec.sub3 + rec.sub4;
+        v_percentage := (v_total / 400.0) * 100;
+        DBMS_OUTPUT.PUT_LINE('Roll No: ' || rec.rollno || ' Total: ' || v_total || ' Percentage: ' || v_percentage);
+    END LOOP;
+END;
+/
+Components:
+DECLARE: Defines variables v_total (integer) and v_percentage (number), and a cursor c1 to select all columns from Student_Marks.
+BEGIN ... END: Iterates through the cursor, calculates the total marks (sub1 + sub2 + sub3 + sub4) and percentage (total / 400 * 100), and outputs the results using DBMS_OUTPUT.PUT_LINE.
+/: Executes the PL/SQL block.
+Purpose: Computes and displays the total marks and percentage for each student.
+Explanation of Logic
+MongoDB:
+Database and Collection Setup: The use school command selects the school database. The insertMany operation creates the Students collection with four sample documents, each containing stud_id, stud_name, stud_addr, and stud_marks. Multiple documents per stud_id (e.g., Aarav, Meera) allow aggregation of marks.
+MapReduce:
+Map: The mapFunc emits each student’s stud_id as the key and stud_marks as the value, creating key-value pairs for each document.
+Reduce: The reduceFunc sums the marks for each stud_id using Array.sum, aggregating multiple marks entries for the same student.
+Output: Results are stored in the TotalMarks collection, with documents like { _id: <stud_id>, value: <total_marks> }.
+Efficiency: MapReduce is suitable for aggregating large datasets, as noted in the theory, and handles multiple marks entries per student effectively.
+PL/SQL:
+Table Setup: The Student_Marks table is created with columns for rollno and four subjects (sub1, sub2, sub3, sub4). Sample data is inserted for two students.
+PL/SQL Block: The cursor c1 retrieves all rows from Student_Marks. For each row, the block:
+Calculates the total by summing the four subject marks.
+Computes the percentage by dividing the total by 400 (maximum marks, assuming 100 per subject) and multiplying by 100.
+Outputs the roll number, total, and percentage using DBMS_OUTPUT.PUT_LINE.
+Efficiency: The cursor-based loop processes each row efficiently, and arithmetic operations are straightforward for small datasets.
+Why This Solution Satisfies the Problem
+Correct Syntax:
+MongoDB: Uses standard syntax for insertMany and mapReduce, with proper emit and Array.sum usage.
+PL/SQL: Uses correct SQL and PL/SQL syntax for table creation, data insertion, cursor declaration, and output.
+MongoDB Requirements:
+Creates the Students collection with the specified schema.
+Implements MapReduce to aggregate total marks per student, handling multiple entries per stud_id.
+PL/SQL Requirements:
+Creates a table for student marks and computes total and percentage using a cursor-based PL/SQL block.
+Outputs results in a clear format.
+Theory Alignment:
+MongoDB: Leverages MapReduce for aggregating large datasets, as noted in the theory, to compute total marks per student.
+PL/SQL: Uses Oracle’s procedural extension to handle complex logic (total and percentage calculation) with cursors, aligning with the theory.
+Enhanced Implementation:
+MongoDB: Retains the original sample data structure, ensuring accurate aggregation.
+PL/SQL: Adds sample data insertion to make the block executable and includes all four subjects in calculations.

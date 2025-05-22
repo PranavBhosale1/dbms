@@ -1,0 +1,238 @@
+
+Tables 22 - BANK Q3 Pramod.txt
+===============================
+
+Question:
+---------
+Create the following tables and add primary key and foreign key wherever applicable.
+Insert data into the tables:
+
+1. Deposit (actno, cname, bname, amount, adate)
+2. Branch (bname, city)
+3. Customers (cname, city)
+4. Borrow (loanno, cname, bname, amount)
+
+Queries to solve:
+-----------------
+1. Display loan no and amount of borrowers having same branch as that of Sunil
+2. Display deposit and loan details of customers in the city where Pramod lives
+3. Display borrower names with deposit amount > 1000 and living city same as Pramod
+4. Display branch and living city of ‘ABC’
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS BankDB22;
+USE BankDB22;
+
+-- Step 2: Create tables with constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- Step 3: Insert data
+
+INSERT INTO Branch VALUES
+('HDFC', 'Mumbai'),
+('SBI', 'Pune'),
+('Axis', 'Nagpur'),
+('OBC', 'Pune');
+
+INSERT INTO Customers VALUES
+('Sunil', 'Pune'),
+('Pramod', 'Nagpur'),
+('ABC', 'Mumbai'),
+('Jay Rajankar', 'Pune'),
+('Gaurav Kaushalye', 'Nagpur');
+
+INSERT INTO Deposit VALUES
+(601, 'Sunil', 'SBI', 9000.00, '2024-01-10'),
+(602, 'Pramod', 'Axis', 12000.00, '2024-02-14'),
+(603, 'Jay Rajankar', 'SBI', 1800.00, '2024-03-01'),
+(604, 'Gaurav Kaushalye', 'Axis', 2500.00, '2024-04-02'),
+(605, 'ABC', 'HDFC', 1300.00, '2024-05-20');
+
+INSERT INTO Borrow VALUES
+(701, 'Sunil', 'SBI', 20000.00),
+(702, 'Pramod', 'Axis', 30000.00),
+(703, 'Jay Rajankar', 'SBI', 15000.00),
+(704, 'Gaurav Kaushalye', 'Axis', 17000.00),
+(705, 'ABC', 'HDFC', 22000.00);
+
+-- Step 4: Queries
+
+-- 1. Loan no and amount of borrowers at same branch as Sunil
+SELECT b.loanno, b.amount
+FROM Borrow b
+WHERE b.bname = (
+    SELECT bname FROM Deposit WHERE cname = 'Sunil'
+);
+
+-- 2. Deposit and loan details of customers in city where Pramod lives
+SELECT 'Deposit' AS type, d.cname, d.bname, d.amount
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = (SELECT city FROM Customers WHERE cname = 'Pramod')
+UNION
+SELECT 'Loan', b.cname, b.bname, b.amount
+FROM Borrow b
+JOIN Customers c ON b.cname = c.cname
+WHERE c.city = (SELECT city FROM Customers WHERE cname = 'Pramod');
+
+-- 3. Borrowers with deposit > 1000 and same city as Pramod
+SELECT DISTINCT b.cname
+FROM Borrow b
+JOIN Customers c1 ON b.cname = c1.cname
+JOIN Deposit d ON b.cname = d.cname
+WHERE d.amount > 1000 AND c1.city = (SELECT city FROM Customers WHERE cname = 'Pramod');
+
+-- 4. Branch and living city of ABC
+SELECT d.bname AS branch_name, c.city AS living_city
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE d.cname = 'ABC';
+
+
+
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS BankDB22;
+USE BankDB22;
+Purpose: Creates the BankDB22 database if it doesn’t exist and switches to it.
+Table Creation with Constraints:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], ... , [FOREIGN KEY (<column>) REFERENCES <table>(<column>)] );
+Example:
+sql
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+Purpose: Creates tables with:
+Primary keys (bname for Branch, cname for Customers, actno for Deposit, loanno for Borrow) for uniqueness.
+Foreign keys in Deposit and Borrow linking to Customers.cname and Branch.bname for referential integrity.
+NOT NULL for required fields and DECIMAL(10,2) for precise monetary amounts.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... ), ...;
+Example:
+sql
+
+INSERT INTO Branch VALUES
+('HDFC', 'Mumbai'),
+...
+Purpose: Populates tables with sample data, ensuring foreign key constraints are satisfied (e.g., cname and bname exist in Customers and Branch).
+Queries:
+Query 1: Loans at Sunil’s Branch:
+Syntax: SELECT <columns> FROM <table> WHERE <column> = (SELECT <column> FROM <table> WHERE <condition>);
+Example:
+sql
+
+SELECT b.loanno, b.amount
+FROM Borrow b
+WHERE b.bname = (
+    SELECT bname FROM Deposit WHERE cname = 'Sunil'
+);
+Purpose: Retrieves loan numbers and amounts for borrowers at Sunil’s branch (SBI).
+Query 2: Deposit and Loan Details in Pramod’s City:
+Syntax: SELECT <columns> FROM <table1> JOIN <table2> ON <condition> WHERE <subquery> UNION SELECT ...;
+Example:
+sql
+
+SELECT 'Deposit' AS type, d.cname, d.bname, d.amount
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = (SELECT city FROM Customers WHERE cname = 'Pramod')
+UNION
+SELECT 'Loan', b.cname, b.bname, b.amount
+FROM Borrow b
+JOIN Customers c ON b.cname = c.cname
+WHERE c.city = (SELECT city FROM Customers WHERE cname = 'Pramod');
+Purpose: Combines deposit and loan details for customers in Pramod’s city (Nagpur) using UNION.
+Query 3: Borrowers with Deposit > 1000 in Pramod’s City:
+Syntax: SELECT DISTINCT <column> FROM <table1> JOIN <table2> ON <condition> JOIN <table3> ON <condition> WHERE <conditions>;
+Example:
+sql
+
+SELECT DISTINCT b.cname
+FROM Borrow b
+JOIN Customers c1 ON b.cname = c1.cname
+JOIN Deposit d ON b.cname = d.cname
+WHERE d.amount > 1000 AND c1.city = (SELECT city FROM Customers WHERE cname = 'Pramod');
+Purpose: Finds borrowers in Nagpur with deposits > ₹1000.
+Query 4: Branch and City of ABC:
+Syntax: SELECT <columns> AS <aliases> FROM <table1> JOIN <table2> ON <condition> WHERE <condition>;
+Example:
+sql
+
+SELECT d.bname AS branch_name, c.city AS living_city
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE d.cname = 'ABC';
+Purpose: Retrieves ABC’s branch and city from deposit records.
+Explanation of Logic
+Database and Table Setup:
+The BankDB22 database is created.
+Tables are defined with primary keys for uniqueness and foreign keys to enforce referential integrity.
+Branch and Customers are created first to satisfy foreign key dependencies in Deposit and Borrow.
+Sample Data:
+Branch: Four branches (HDFC, SBI, Axis, OBC) in Mumbai, Pune, and Nagpur.
+Customers: Five customers in Pune, Nagpur, and Mumbai.
+Deposit: Five deposit records with amounts and 2024 dates.
+Borrow: Five loan records linked to branches and customers.
+Queries:
+Query 1: Identifies Sunil’s branch (SBI from Deposit) and retrieves loan numbers and amounts for SBI borrowers (Sunil: 701, ₹20000; Jay Rajankar: 703, ₹15000).
+Query 2: Finds Pramod’s city (Nagpur), joins Deposit and Borrow with Customers to get records for Nagpur residents (Pramod, Gaurav Kaushalye), and uses UNION to combine deposit (Pramod: ₹12000, Gaurav: ₹2500) and loan (Pramod: ₹30000, Gaurav: ₹17000) details.
+Query 3: Joins Borrow, Customers, and Deposit to find borrowers in Nagpur with deposits > ₹1000 (Pramod: ₹12000, Gaurav: ₹2500), returning distinct names (Pramod, Gaurav Kaushalye).
+Query 4: Joins Deposit and Customers to get ABC’s branch (HDFC) and city (Mumbai).
+Efficiency: Primary and foreign keys ensure efficient joins. Queries use targeted joins and subqueries, optimized for the small dataset. DISTINCT in Query 3 avoids duplicate names.
+Why This Solution Satisfies the Problem
+Correct Syntax: Uses standard SQL syntax for database creation, table setup with constraints, data insertion, and query execution.
+Schema Adherence: Tables (Branch, Customers, Deposit, Borrow) match the specified schema with proper primary and foreign key constraints.
+Query Accuracy:
+Query 1 correctly identifies loans at Sunil’s branch.
+Query 2 combines deposit and loan details for Pramod’s city using UNION.
+Query 3 finds borrowers with deposits > ₹1000 in Pramod’s city.
+Query 4 retrieves ABC’s branch and city.
+Theory Alignment: Demonstrates relational database principles (keys, joins, subqueries, UNION) for banking data management.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, and query execution.
+Enhanced Output: Retains the original logic and data, ensuring clear and accurate query results.

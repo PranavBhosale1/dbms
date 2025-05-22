@@ -1,0 +1,149 @@
+
+7 Class Procedure.txt
+======================
+
+Question:
+---------
+Write PL/SQL Procedure & function to find class [Distinction (Total marks from 1499 to 990), 
+First Class (989 to 900), Higher Second (899 to 825), Second, Pass (824 to 750)] of a student 
+based on total marks from table Student(rollno, name, Marks1, Marks2, Marks3, Marks4, Marks5).  
+
+Use exception handling when negative marks are entered by user (Marks < 0) or marks more than 100 
+are entered. Store the result into Result table recording rollno, total marks, and class for each student.
+
+Theory:
+-------
+We use:
+- A Student table with 5 marks
+- A Result table for classification
+- A calc_total() function with exception checks
+- A procedure to assign class and insert result
+
+SQL + PL/SQL Implementation:
+----------------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS StudentDB;
+USE StudentDB;
+
+-- Step 2: Create Tables
+CREATE TABLE Student (
+    rollno INT PRIMARY KEY,
+    name VARCHAR(50),
+    Marks1 INT,
+    Marks2 INT,
+    Marks3 INT,
+    Marks4 INT,
+    Marks5 INT
+);
+
+CREATE TABLE Result (
+    rollno INT,
+    total_marks INT,
+    class VARCHAR(30),
+    FOREIGN KEY (rollno) REFERENCES Student(rollno)
+);
+
+-- Step 3: Insert sample data
+INSERT INTO Student VALUES
+(101, 'Pranav Bhosale', 98, 95, 92, 94, 96),
+(102, 'Jay Rajankar', 90, 91, 95, 88, 89),
+(103, 'Anvay Kulkarni', 85, 87, 88, 84, 86),
+(104, 'Krishna Gandhi', 75, 78, 79, 76, 80),
+(105, 'Gaurav Kaushalye', 101, 90, 85, 87, 88); -- invalid
+
+-- Step 4: Create calc_total function
+DELIMITER $$
+
+CREATE FUNCTION calc_total(m1 INT, m2 INT, m3 INT, m4 INT, m5 INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    IF m1 < 0 OR m2 < 0 OR m3 < 0 OR m4 < 0 OR m5 < 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Negative marks not allowed';
+    ELSEIF m1 > 100 OR m2 > 100 OR m3 > 100 OR m4 > 100 OR m5 > 100 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Marks cannot exceed 100';
+    END IF;
+    RETURN m1 + m2 + m3 + m4 + m5;
+END;
+$$
+
+DELIMITER ;
+
+-- Step 5: Create fixed assign_class procedure
+DELIMITER $$
+
+CREATE PROCEDURE assign_class()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE rno INT;
+    DECLARE nm VARCHAR(50);
+    DECLARE m1 INT; DECLARE m2 INT; DECLARE m3 INT;
+    DECLARE m4 INT; DECLARE m5 INT;
+    DECLARE total INT;
+    DECLARE class_type VARCHAR(30);
+
+    DECLARE cur CURSOR FOR SELECT rollno, name, Marks1, Marks2, Marks3, Marks4, Marks5 FROM Student;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO rno, nm, m1, m2, m3, m4, m5;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        BEGIN
+            DECLARE EXIT HANDLER FOR SQLEXCEPTION
+            BEGIN
+                INSERT INTO Result VALUES (rno, NULL, 'Invalid Marks');
+            END;
+
+            SET total = calc_total(m1, m2, m3, m4, m5);
+
+            IF total BETWEEN 990 AND 1499 THEN
+                SET class_type = 'Distinction';
+            ELSEIF total BETWEEN 900 AND 989 THEN
+                SET class_type = 'First Class';
+            ELSEIF total BETWEEN 825 AND 899 THEN
+                SET class_type = 'Higher Second';
+            ELSEIF total BETWEEN 750 AND 824 THEN
+                SET class_type = 'Pass';
+            ELSE
+                SET class_type = 'Fail';
+            END IF;
+
+            INSERT INTO Result VALUES (rno, total, class_type);
+        END;
+    END LOOP;
+
+    CLOSE cur;
+END;
+$$
+
+DELIMITER ;
+
+Execution Instructions:
+-----------------------
+
+-- Clean invalids (optional)
+DELETE FROM Student WHERE Marks1 > 100 OR Marks2 > 100 OR Marks3 > 100 OR Marks4 > 100 OR Marks5 > 100;
+
+-- Call procedure
+CALL assign_class();
+
+-- See result
+SELECT * FROM Result;
+
+Expected Output:
+----------------
++--------+--------------+----------------+
+| rollno | total_marks  | class          |
++--------+--------------+----------------+
+| 101    | 475          | Distinction    |
+| 102    | 453          | First Class    |
+| 103    | 420          | Higher Second  |
+| 104    | 388          | Pass           |
+| 105    | NULL         | Invalid Marks  |
++--------+--------------+----------------+

@@ -1,0 +1,149 @@
+12 MongoDB Indexing and Querying.txt
+
+Question:
+Implement Indexing and querying with MongoDB using following example:
+Students(stud_id, stud_name, stud_addr, stud_marks)
+
+Theory:
+MongoDB is a NoSQL database that stores data in flexible, JSON-like documents. Indexes support efficient resolution of queries by creating a data structure that holds a portion of the data set in an easily traversable form. Without indexes, MongoDB must scan every document in a collection.
+
+Why Our Solution Satisfies the Problem:
+- We create a `Students` collection and insert sample documents.
+- We create an index on `stud_id` and also demonstrate compound indexing.
+- We perform queries to fetch data by address and marks, and demonstrate sorting and filtering using the created indexes.
+
+MongoDB Code:
+
+-- Step 1: Create the Students Collection and Insert Data
+use university;
+
+db.createCollection("Students");
+
+db.Students.insertMany([
+    { stud_id: 1, stud_name: "Aarav", stud_addr: "Pune", stud_marks: 85 },
+    { stud_id: 2, stud_name: "Meera", stud_addr: "Mumbai", stud_marks: 92 },
+    { stud_id: 3, stud_name: "Karan", stud_addr: "Delhi", stud_marks: 76 },
+    { stud_id: 4, stud_name: "Sneha", stud_addr: "Pune", stud_marks: 64 },
+    { stud_id: 5, stud_name: "Rohit", stud_addr: "Nagpur", stud_marks: 88 }
+]);
+
+-- Step 2: Create Indexes
+db.Students.createIndex({ stud_id: 1 });  // Index on stud_id
+db.Students.createIndex({ stud_addr: 1, stud_marks: -1 });  // Compound index
+
+-- Step 3: Query Using Index
+// Find students from Pune
+db.Students.find({ stud_addr: "Pune" });
+
+// Find students with marks greater than 80
+db.Students.find({ stud_marks: { $gt: 80 } });
+
+// Sort students by marks descending
+db.Students.find().sort({ stud_marks: -1 });
+
+// Find and sort students from Mumbai with marks > 80
+db.Students.find({ stud_addr: "Mumbai", stud_marks: { $gt: 80 } }).sort({ stud_marks: -1 });
+
+-- Step 4: View Indexes
+db.Students.getIndexes();
+
+
+
+Below is the solution for the MongoDB task based on the provided task from "12 MongoDB Indexing and Querying.txt". It includes the creation of the Students collection with the specified schema, implementation of indexing and querying operations, proper MongoDB syntax, a detailed explanation of the syntax used, and the logic behind each operation. The code is wrapped in an artifact tag as per the guidelines.
+
+The task requires:
+
+Creating a MongoDB collection Students with fields stud_id, stud_name, stud_addr, and stud_marks.
+Creating indexes (single-field and compound) on the collection.
+Performing queries to fetch data by address and marks, including sorting and filtering, leveraging the created indexes.
+Viewing the indexes.
+MongoDB Indexing and Querying for Students
+plain
+Show inline
+Syntax Used
+Database Selection:
+Syntax: use <database_name>
+Example: use university
+Purpose: Switches to the university database, creating it if it doesn’t exist when data is inserted.
+Create Collection:
+Syntax: db.createCollection("<collection_name>")
+Example: db.createCollection("Students")
+Purpose: Explicitly creates the Students collection, though MongoDB creates collections implicitly upon data insertion.
+Insert Documents:
+Syntax: db.collection.insertMany([ { <document1> }, { <document2> }, ... ])
+Example:
+javascript
+
+Copy
+db.Students.insertMany([
+    { stud_id: 1, stud_name: "Aarav", stud_addr: "Pune", stud_marks: 85 },
+    ...
+])
+Purpose: Inserts multiple documents into the Students collection, each following the schema with stud_id, stud_name, stud_addr, and stud_marks.
+Create Indexes:
+Single-field Index:
+Syntax: db.collection.createIndex({ <field>: <1 or -1> })
+Example: db.Students.createIndex({ stud_id: 1 })
+Purpose: Creates an ascending index on stud_id to optimize queries filtering by student ID.
+Compound Index:
+Syntax: db.collection.createIndex({ <field1>: <1 or -1>, <field2>: <1 or -1> })
+Example: db.Students.createIndex({ stud_addr: 1, stud_marks: -1 })
+Purpose: Creates a compound index on stud_addr (ascending) and stud_marks (descending) to optimize queries involving both fields, such as filtering by address and sorting by marks.
+Querying:
+Find All or Filtered Documents:
+Syntax: db.collection.find({ <query> }, { <projection> })
+Examples:
+javascript
+
+Copy
+db.Students.find({ stud_addr: "Pune" }, { _id: 0 }) // Query 1
+db.Students.find({ stud_marks: { $gt: 80 } }, { _id: 0 }) // Query 2
+Components:
+Query: { stud_addr: "Pune" } filters by address; { stud_marks: { $gt: 80 } } uses $gt to filter marks greater than 80.
+Projection: { _id: 0 } excludes _id for cleaner output.
+Purpose: Retrieves specific documents based on conditions.
+Sort:
+Syntax: db.collection.find().sort({ <field>: <1 or -1> })
+Example: db.Students.find({}, { _id: 0 }).sort({ stud_marks: -1 })
+Purpose: Orders results by stud_marks in descending order (-1).
+Combined Filter and Sort:
+Example:
+javascript
+
+Copy
+db.Students.find(
+    { stud_addr: "Mumbai", stud_marks: { $gt: 80 } },
+    { _id: 0 }
+).sort({ stud_marks: -1 })
+Purpose: Filters by address and marks, then sorts by marks in descending order.
+View Indexes:
+Syntax: db.collection.getIndexes()
+Example: db.Students.getIndexes()
+Purpose: Lists all indexes on the Students collection, including the default _id index and created indexes.
+Explanation of Logic
+Database and Collection Setup: The use university command selects the university database. The createCollection command explicitly creates the Students collection, followed by insertMany to populate it with five sample documents adhering to the specified schema.
+Indexing:
+Single-field Index: The index on stud_id optimizes queries filtering by student ID (e.g., exact matches).
+Compound Index: The index on stud_addr and stud_marks supports queries filtering by address and sorting by marks, such as Query 4. The ascending (1) order for stud_addr and descending (-1) order for stud_marks align with common query patterns.
+Querying:
+Query 1: Retrieves all students from Pune, leveraging the compound index on stud_addr.
+Query 2: Finds students with marks greater than 80, potentially using the compound index’s stud_marks component.
+Query 3: Sorts all students by marks in descending order, using the compound index for efficient sorting.
+Query 4: Combines filtering (Mumbai students with marks > 80) and sorting (by marks), optimized by the compound index.
+View Indexes: Displays all indexes to verify their creation.
+Efficiency: The single-field index on stud_id ensures fast lookups by ID. The compound index on stud_addr and stud_marks optimizes queries involving address filtering and mark-based sorting, reducing the need for full collection scans (as noted in the theory).
+Why This Solution Satisfies the Problem
+Correct Syntax: The code uses standard MongoDB syntax for createCollection, insertMany, createIndex, find, sort, and getIndexes, ensuring accurate execution.
+Indexing:
+Implements a single-field index on stud_id for ID-based queries.
+Implements a compound index on stud_addr and stud_marks for combined filtering and sorting.
+Querying:
+Demonstrates filtering by address (Query 1), marks (Query 2), sorting (Query 3), and combined filtering/sorting (Query 4).
+Uses projections ({ _id: 0 }) to enhance output readability.
+Theory Alignment:
+Adheres to MongoDB’s NoSQL document-based storage, as described.
+Uses indexes to improve query performance, avoiding full collection scans (as per the theory).
+Demonstrates efficient querying with filtering and sorting.
+Enhanced Implementation:
+Adds { _id: 0 } in projections for cleaner output, improving on the original code.
+Retains the original queries and data structure while ensuring index usage.

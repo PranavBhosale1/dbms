@@ -1,0 +1,267 @@
+
+18 bank 4Q akurdi DML.txt
+==========================
+
+Question:
+---------
+Implement all SQL DML operations with operators, functions, and set operators for the following schema:
+Create tables with appropriate constraints like primary key, foreign key, check constraints, not null, etc.
+
+Schema:
+-------
+1. Account(Acc_no, branch_name, balance)
+2. Branch(branch_name, branch_city, assets)
+3. Customer(cust_name, cust_street, cust_city)
+4. Depositor(cust_name, acc_no)
+5. Loan(loan_no, branch_name, amount)
+6. Borrower(cust_name, loan_no)
+
+Queries to be solved:
+---------------------
+1. Find all customers who have an account or loan or both at bank.
+2. Find all customers who have both account and loan at bank.
+3. Find all customers who have account but no loan at the bank.
+4. Find average account balance at Akurdi branch.
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS AkurdiBank18DB;
+USE AkurdiBank18DB;
+
+-- Step 2: Create tables with constraints
+
+CREATE TABLE Branch (
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50) NOT NULL,
+    assets DECIMAL(12,2) CHECK (assets >= 0)
+);
+
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    balance DECIMAL(10,2) CHECK (balance >= 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Customer (
+    cust_name VARCHAR(100) PRIMARY KEY,
+    cust_street VARCHAR(100) NOT NULL,
+    cust_city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Depositor (
+    cust_name VARCHAR(100),
+    acc_no INT,
+    PRIMARY KEY (cust_name, acc_no),
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (acc_no) REFERENCES Account(acc_no)
+);
+
+CREATE TABLE Loan (
+    loan_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    amount DECIMAL(10,2) CHECK (amount > 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Borrower (
+    cust_name VARCHAR(100),
+    loan_no INT,
+    PRIMARY KEY (cust_name, loan_no),
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO Branch VALUES
+('Akurdi Branch', 'Pune', 10000000),
+('Kothrud Branch', 'Pune', 12000000),
+('Wakad Branch', 'Pune', 9000000);
+
+INSERT INTO Account VALUES
+(201, 'Akurdi Branch', 15000),
+(202, 'Wakad Branch', 20000),
+(203, 'Kothrud Branch', 11000),
+(204, 'Akurdi Branch', 9000),
+(205, 'Kothrud Branch', 18000);
+
+INSERT INTO Customer VALUES
+('Pranav Bhosale', 'Nigdi', 'Pune'),
+('Jay Rajankar', 'Wakad', 'Pune'),
+('Anvay Kulkarni', 'Baner', 'Pune'),
+('Krishna Gandhi', 'Kothrud', 'Pune'),
+('Gaurav Kaushalye', 'Shivajinagar', 'Pune');
+
+INSERT INTO Depositor VALUES
+('Pranav Bhosale', 201),
+('Jay Rajankar', 202),
+('Krishna Gandhi', 203),
+('Anvay Kulkarni', 204);
+
+INSERT INTO Loan VALUES
+(501, 'Akurdi Branch', 30000),
+(502, 'Wakad Branch', 40000),
+(503, 'Kothrud Branch', 50000),
+(504, 'Akurdi Branch', 25000),
+(505, 'Wakad Branch', 20000);
+
+INSERT INTO Borrower VALUES
+('Pranav Bhosale', 501),
+('Gaurav Kaushalye', 502),
+('Jay Rajankar', 503),
+('Krishna Gandhi', 504);
+
+-- Step 4: Solve Queries
+
+-- 1. Customers with account or loan or both (UNION)
+SELECT cust_name FROM Depositor
+UNION
+SELECT cust_name FROM Borrower;
+
+-- 2. Customers with both account AND loan (INTERSECT via INNER JOIN)
+SELECT DISTINCT d.cust_name
+FROM Depositor d
+JOIN Borrower b ON d.cust_name = b.cust_name;
+
+-- 3. Customers with account but NO loan (EXCEPT via LEFT JOIN + NULL filter)
+SELECT DISTINCT d.cust_name
+FROM Depositor d
+LEFT JOIN Borrower b ON d.cust_name = b.cust_name
+WHERE b.cust_name IS NULL;
+
+-- 4. Average account balance at Akurdi branch
+SELECT AVG(balance) AS avg_balance_akurdi
+FROM Account
+WHERE branch_name = 'Akurdi Branch';
+
+
+
+Below is the solution for the SQL task based on the provided task from "DML 18 - BANK 4Q Akurdi.txt". It includes the creation of the database and tables (Account, Branch, Customer, Depositor, Loan, Borrower) with appropriate primary, foreign key, and check constraints, insertion of sample data, and execution of the specified DML queries to retrieve customer and account information. The solution uses proper SQL syntax, provides a detailed explanation of the syntax used, and explains the logic behind each operation. The code is wrapped in an artifact tag as per the guidelines, with the content type set to text/sql for SQL.
+
+The task requires:
+
+Creating a database AkurdiBank18DB and six tables with constraints:
+Account (acc_no, branch_name, balance)
+Branch (branch_name, branch_city, assets)
+Customer (cust_name, cust_street, cust_city)
+Depositor (cust_name, acc_no)
+Loan (loan_no, branch_name, amount)
+Borrower (cust_name, loan_no)
+Inserting sample data into all tables.
+Executing four queries:
+Find all customers who have an account or loan or both at the bank.
+Find all customers who have both an account and a loan at the bank.
+Find all customers who have an account but no loan at the bank.
+Find the average account balance at the Akurdi branch.
+SQL Bank 4Q Akurdi
+sql
+Show inline
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS AkurdiBank18DB;
+USE AkurdiBank18DB;
+Purpose: Creates the AkurdiBank18DB database if it doesn’t exist and switches to it.
+Table Creation with Constraints:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], ... , [FOREIGN KEY (<column>) REFERENCES <table>(<column>)] );
+Example:
+sql
+
+CREATE TABLE Branch (
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50) NOT NULL,
+    assets DECIMAL(12,2) CHECK (assets >= 0)
+);
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50) NOT NULL,
+    balance DECIMAL(10,2) CHECK (balance >= 0),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+Purpose: Creates tables with:
+Primary keys (branch_name, acc_no, cust_name, loan_no, composite keys for Depositor and Borrower) for uniqueness.
+Foreign keys linking Account and Loan to Branch, and Depositor and Borrower to Customer, Account, and Loan for referential integrity.
+CHECK constraints (e.g., assets >= 0, amount > 0) to enforce data validity.
+NOT NULL for required fields and DECIMAL(10,2) or DECIMAL(12,2) for precise monetary amounts.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2>, ... ), ...;
+Example:
+sql
+
+INSERT INTO Branch VALUES
+('Akurdi Branch', 'Pune', 10000000.00),
+...
+Purpose: Populates tables with sample data, ensuring foreign key and check constraints are satisfied.
+Queries:
+Query 1: Customers with Account or Loan or Both (UNION):
+Syntax: SELECT <column> FROM <table1> UNION SELECT <column> FROM <table2>;
+Example:
+sql
+
+SELECT cust_name FROM Depositor
+UNION
+SELECT cust_name FROM Borrower;
+Purpose: Combines distinct customer names from Depositor and Borrower.
+Query 2: Customers with Both Account and Loan (INTERSECT via JOIN):
+Syntax: SELECT DISTINCT <column> FROM <table1> JOIN <table2> ON <condition>;
+Example:
+sql
+
+SELECT DISTINCT d.cust_name
+FROM Depositor d
+JOIN Borrower b ON d.cust_name = b.cust_name;
+Purpose: Finds customers present in both Depositor and Borrower using a join to simulate INTERSECT.
+Query 3: Customers with Account but No Loan (EXCEPT via LEFT JOIN):
+Syntax: SELECT DISTINCT <column> FROM <table1> LEFT JOIN <table2> ON <condition> WHERE <table2.column> IS NULL;
+Example:
+sql
+
+SELECT DISTINCT d.cust_name
+FROM Depositor d
+LEFT JOIN Borrower b ON d.cust_name = b.cust_name
+WHERE b.cust_name IS NULL;
+Purpose: Finds customers in Depositor but not in Borrower using a left join with a NULL filter to simulate EXCEPT.
+Query 4: Average Account Balance at Akurdi Branch:
+Syntax: SELECT AVG(<column>) AS <alias> FROM <table> WHERE <condition>;
+Example:
+sql
+
+SELECT AVG(balance) AS avg_balance_akurdi
+FROM Account
+WHERE branch_name = 'Akurdi Branch';
+Purpose: Calculates the average balance of accounts at the Akurdi branch.
+Explanation of Logic
+Database and Table Setup:
+The AkurdiBank18DB database is created.
+Tables are defined with primary keys, foreign keys, and check constraints to ensure data integrity.
+Branch, Customer, and Account are created first to satisfy foreign key dependencies in Depositor, Loan, and Borrower.
+Sample Data:
+Branch: Three branches in Pune (Akurdi, Kothrud, Wakad).
+Account: Five accounts with balances across branches (two at Akurdi: ₹15000, ₹9000).
+Customer: Five customers in Pune.
+Depositor: Four customers linked to accounts (Pranav, Jay, Krishna, Anvay).
+Loan: Five loans across branches.
+Borrower: Four customers linked to loans (Pranav, Gaurav, Jay, Krishna).
+Queries:
+Query 1: Uses UNION to combine distinct customer names from Depositor (Pranav Bhosale, Jay Rajankar, Krishna Gandhi, Anvay Kulkarni) and Borrower (Pranav Bhosale, Gaurav Kaushalye, Jay Rajankar, Krishna Gandhi). Result: all five customers (Pranav Bhosale, Jay Rajankar, Krishna Gandhi, Anvay Kulkarni, Gaurav Kaushalye).
+Query 2: Joins Depositor and Borrower to find customers with both accounts and loans. Result: Pranav Bhosale, Jay Rajankar, Krishna Gandhi (all have entries in both tables).
+Query 3: Uses a LEFT JOIN to find customers in Depositor but not in Borrower. Result: Anvay Kulkarni (has an account but no loan).
+Query 4: Calculates the average balance at Akurdi Branch (accounts 201: ₹15000, 204: ₹9000; average = (15000 + 9000) / 2 = ₹12000).
+Efficiency: Primary and foreign keys ensure efficient joins and lookups. UNION, JOIN, and AVG are optimized for the small dataset. DISTINCT prevents duplicate names where needed.
+Why This Solution Satisfies the Problem
+Correct Syntax: Uses standard SQL syntax for database creation, table setup with constraints, data insertion, and query execution.
+Schema Adherence: Tables (Branch, Account, Customer, Depositor, Loan, Borrower) match the specified schema with primary, foreign key, and check constraints.
+Query Accuracy:
+Query 1 correctly lists all customers with accounts or loans using UNION.
+Query 2 identifies customers with both accounts and loans using a join.
+Query 3 finds customers with accounts but no loans using a left join.
+Query 4 accurately calculates the average balance at Akurdi.
+Theory Alignment: Demonstrates DML operations, set operators (UNION), joins, and aggregate functions (AVG) in a banking context.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, and query execution.
+Enhanced Output: Retains the original logic and data, ensuring accurate and clear results with proper constraint handling.

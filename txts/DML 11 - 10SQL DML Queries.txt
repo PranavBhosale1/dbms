@@ -1,0 +1,158 @@
+
+11 SQL DML Queries.txt
+=======================
+
+Question:
+---------
+Design at least 10 SQL queries for a suitable database application using SQL DML statements:  
+Include all types of:
+- Joins (INNER, LEFT, RIGHT, FULL OUTER)
+- Subqueries
+- Views
+
+📚 Theory
+---------
+We will build a **Library Borrowing System** using the following tables:
+
+1. Students(Rollin, Name, Department)
+2. Books(BookID, Title, Subject)
+3. Borrow(Rollin, BookID, DateOfIssue, Status)
+4. Fine(Rollin, BookID, FineAmount)
+
+This schema allows us to:
+- Track students and departments
+- Manage book inventory by subject
+- Log borrow activity and status ('I' = Issued, 'R' = Returned)
+- Record fine data if applicable
+
+Sample Data:
+------------
+
+-- Create and use DB
+CREATE DATABASE IF NOT EXISTS LibraryDMLDB;
+USE LibraryDMLDB;
+
+-- Students
+CREATE TABLE Students (
+    Rollin INT PRIMARY KEY,
+    Name VARCHAR(100),
+    Department VARCHAR(50)
+);
+
+-- Books
+CREATE TABLE Books (
+    BookID INT PRIMARY KEY,
+    Title VARCHAR(100),
+    Subject VARCHAR(100)
+);
+
+-- Borrow
+CREATE TABLE Borrow (
+    Rollin INT,
+    BookID INT,
+    DateOfIssue DATE,
+    Status CHAR(1),
+    FOREIGN KEY (Rollin) REFERENCES Students(Rollin),
+    FOREIGN KEY (BookID) REFERENCES Books(BookID)
+);
+
+-- Fine
+CREATE TABLE Fine (
+    Rollin INT,
+    BookID INT,
+    FineAmount DECIMAL(8,2)
+);
+
+-- Insert sample students
+INSERT INTO Students VALUES
+(101, 'Pranav Bhosale', 'Computer'),
+(102, 'Jay Rajankar', 'IT'),
+(103, 'Anvay Kulkarni', 'Electronics'),
+(104, 'Krishna Gandhi', 'Mechanical'),
+(105, 'Gaurav Kaushalye', 'Computer');
+
+-- Insert sample books
+INSERT INTO Books VALUES
+(1, 'Data Structures', 'CS'),
+(2, 'Operating Systems', 'CS'),
+(3, 'DBMS', 'CS'),
+(4, 'Software Engineering', 'IT'),
+(5, 'Computer Networks', 'CS');
+
+-- Insert sample borrow logs
+INSERT INTO Borrow VALUES
+(101, 1, '2025-05-01', 'I'),
+(102, 2, '2025-05-02', 'R'),
+(103, 3, '2025-05-03', 'I'),
+(104, 4, '2025-05-04', 'R'),
+(105, 5, '2025-05-05', 'I');
+
+-- Insert sample fine logs
+INSERT INTO Fine VALUES
+(102, 2, 50.00),
+(104, 4, 30.00);
+
+SQL Queries:
+------------
+
+-- 1. INNER JOIN: List student name and title of books they have borrowed
+SELECT s.Name, b.Title
+FROM Students s
+INNER JOIN Borrow br ON s.Rollin = br.Rollin
+INNER JOIN Books b ON br.BookID = b.BookID;
+
+-- 2. LEFT JOIN: Show all students and their borrowed book titles (if any)
+SELECT s.Name, b.Title
+FROM Students s
+LEFT JOIN Borrow br ON s.Rollin = br.Rollin
+LEFT JOIN Books b ON br.BookID = b.BookID;
+
+-- 3. RIGHT JOIN: Show all books and who borrowed them (if any)
+SELECT s.Name, b.Title
+FROM Students s
+RIGHT JOIN Borrow br ON s.Rollin = br.Rollin
+RIGHT JOIN Books b ON br.BookID = b.BookID;
+
+-- 4. Subquery: Find students who have been fined
+SELECT Name
+FROM Students
+WHERE Rollin IN (SELECT DISTINCT Rollin FROM Fine);
+
+-- 5. Subquery with join: Books never fined
+SELECT Title
+FROM Books
+WHERE BookID NOT IN (SELECT DISTINCT BookID FROM Fine);
+
+-- 6. View: Create a view for active borrow list
+CREATE VIEW ActiveBorrowers AS
+SELECT s.Name, b.Title, br.DateOfIssue
+FROM Students s
+JOIN Borrow br ON s.Rollin = br.Rollin
+JOIN Books b ON br.BookID = b.BookID
+WHERE br.Status = 'I';
+
+-- 7. Query view: Show all currently borrowed books
+SELECT * FROM ActiveBorrowers;
+
+-- 8. FULL OUTER JOIN simulation using UNION
+SELECT s.Name, b.Title
+FROM Students s
+LEFT JOIN Borrow br ON s.Rollin = br.Rollin
+LEFT JOIN Books b ON br.BookID = b.BookID
+UNION
+SELECT s.Name, b.Title
+FROM Students s
+RIGHT JOIN Borrow br ON s.Rollin = br.Rollin
+RIGHT JOIN Books b ON br.BookID = b.BookID;
+
+-- 9. Get count of books borrowed by each student
+SELECT s.Name, COUNT(br.BookID) AS NumBooks
+FROM Students s
+LEFT JOIN Borrow br ON s.Rollin = br.Rollin
+GROUP BY s.Name;
+
+-- 10. Get total fine amount paid by each student
+SELECT s.Name, COALESCE(SUM(f.FineAmount), 0) AS TotalFine
+FROM Students s
+LEFT JOIN Fine f ON s.Rollin = f.Rollin
+GROUP BY s.Name;

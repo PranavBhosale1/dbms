@@ -1,0 +1,371 @@
+	
+Question 1: 
+Draw an ER for Bank database with atleast 5 entities and convert them into tables.
+Perform DDL on above converted tables.
+1. Create tables with all constraints
+2. Create views on any two tables using join conditions
+3. Create index called CustomerId. Entries should be in ascending order by customer name.
+4. Create sequence on Acctno.
+==========================================================
+
+Theory:
+-------
+In a banking system, we often deal with multiple related entities such as customers, accounts,
+branches, loans, and transactions. To convert an ER diagram to a relational schema, we follow
+these steps:
+
+1. **Entities become tables** – Each entity (Customer, Account, etc.) is represented as a table.
+2. **Attributes become columns** – Each attribute of the entity becomes a column in the table.
+3. **Primary Keys** – Uniquely identify rows within a table.
+4. **Foreign Keys** – Represent relationships between entities.
+5. **Views** – Virtual tables that help present data from multiple tables in a meaningful format.
+6. **Indexes** – Improve search performance; in this case, we index by customer name.
+7. **Sequences (in MySQL: AUTO_INCREMENT)** – Generate unique values automatically, used here for account numbers and IDs.
+
+SQL Implementation:
+-------------------
+
+-- STEP 1: Create and select database
+CREATE DATABASE BankDB;
+USE BankDB;
+
+-- STEP 2: Tables and Constraints
+CREATE TABLE Customer (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    address VARCHAR(100),
+    phone VARCHAR(15) UNIQUE
+);
+
+CREATE TABLE Branch (
+    branch_id INT AUTO_INCREMENT PRIMARY KEY,
+    branch_name VARCHAR(50),
+    location VARCHAR(100)
+);
+
+CREATE TABLE Account (
+    acct_no INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    branch_id INT,
+    balance DECIMAL(10,2) CHECK (balance >= 0),
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id),
+    FOREIGN KEY (branch_id) REFERENCES Branch(branch_id)
+);
+
+CREATE TABLE Loan (
+    loan_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    branch_id INT,
+    amount DECIMAL(10,2),
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id),
+    FOREIGN KEY (branch_id) REFERENCES Branch(branch_id)
+);
+
+CREATE TABLE Transaction (
+    txn_id INT AUTO_INCREMENT PRIMARY KEY,
+    acct_no INT,
+    txn_type VARCHAR(10) CHECK (txn_type IN ('deposit', 'withdraw')),
+    amount DECIMAL(10,2),
+    txn_date DATE,
+    FOREIGN KEY (acct_no) REFERENCES Account(acct_no)
+);
+
+-- STEP 3: Sample Data
+INSERT INTO Customer (name, address, phone) VALUES 
+('Pranav Bhosale', 'Pune', '9988776655'),
+('Jay Rajankar', 'Mumbai', '9977665544'),
+('Anvay Kulkarni', 'Nashik', '8877665544'),
+('Krishna Gandhi', 'Nagpur', '7788556699'),
+('Gaurav Kaushalye', 'Aurangabad', '8899001122');
+
+INSERT INTO Branch (branch_name, location) VALUES
+('Pune Main', 'Pune'),
+('Mumbai Central', 'Mumbai'),
+('Nashik City', 'Nashik'),
+('Nagpur Hub', 'Nagpur'),
+('Aurangabad Branch', 'Aurangabad');
+
+INSERT INTO Account (customer_id, branch_id, balance) VALUES
+(1, 1, 15000.00),
+(2, 2, 12000.00),
+(3, 3, 18000.00),
+(4, 4, 9500.00),
+(5, 5, 11000.00);
+
+INSERT INTO Loan (customer_id, branch_id, amount) VALUES
+(1, 1, 50000.00),
+(2, 2, 45000.00),
+(3, 3, 62000.00),
+(4, 4, 30000.00),
+(5, 5, 38000.00);
+
+INSERT INTO Transaction (acct_no, txn_type, amount, txn_date) VALUES
+(1, 'deposit', 2000.00, '2024-01-10'),
+(2, 'withdraw', 1000.00, '2024-02-05'),
+(3, 'deposit', 500.00, '2024-03-15'),
+(4, 'withdraw', 1200.00, '2024-04-10'),
+(5, 'deposit', 2500.00, '2024-05-01');
+
+-- STEP 4: Views
+-- Why Views? They allow you to simplify complex joins and create reusable data layers.
+
+CREATE VIEW Customer_Account_View AS
+SELECT c.name AS customer_name, a.acct_no, a.balance, b.branch_name
+FROM Customer c
+JOIN Account a ON c.customer_id = a.customer_id
+JOIN Branch b ON a.branch_id = b.branch_id;
+
+CREATE VIEW Customer_Loan_View AS
+SELECT c.name AS customer_name, l.loan_id, l.amount, b.branch_name
+FROM Customer c
+JOIN Loan l ON c.customer_id = l.customer_id
+JOIN Branch b ON l.branch_id = b.branch_id;
+
+-- STEP 5: Index
+-- Why Index? Improves the speed of data retrieval on columns used in WHERE/ORDER BY.
+CREATE INDEX idx_customer_name ON Customer(name ASC);
+
+-- STEP 6: Sequence Simulation (in MySQL)
+-- In MySQL, AUTO_INCREMENT takes care of sequence generation. You can check it like this:
+-- SELECT AUTO_INCREMENT FROM information_schema.tables WHERE table_name = 'Account';
+
+Validation Queries:
+-------------------
+
+-- View customer account details
+SELECT * FROM Customer_Account_View;
+
+-- View customer loan details
+SELECT * FROM Customer_Loan_View;
+
+-- Validate index by ordering customers
+SELECT * FROM Customer ORDER BY name;
+
+-- Show auto-increment value (simulates sequence)
+SELECT AUTO_INCREMENT 
+FROM information_schema.tables 
+WHERE table_name = 'Account' AND table_schema = 'BankDB';
+
+
+🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+Perfect! Let’s **walk through the actual code section-by-section** and explain **what each part is doing**, **why it’s necessary**, and **what to highlight during your oral exam**.
+
+---
+
+## ✅ **Step-by-Step Code Explanation with Theory**
+
+---
+
+### 🟩 **1. Create Database and Use It**
+
+```sql
+CREATE DATABASE BankDB;
+USE BankDB;
+```
+
+🔸 **What it does**:
+
+* `CREATE DATABASE` sets up a dedicated logical space to contain all bank-related tables.
+* `USE` switches context to the `BankDB` database so subsequent operations apply here.
+
+🔸 **Why it's important**:
+
+* Isolates data; avoids conflicts with other databases.
+
+---
+
+### 🟩 **2. Create the `Customer` Table**
+
+```sql
+CREATE TABLE Customer (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    address VARCHAR(100),
+    phone VARCHAR(15) UNIQUE
+);
+```
+
+🔸 **Highlights**:
+
+* `AUTO_INCREMENT`: MySQL's built-in **sequence simulation** for generating unique IDs.
+* `PRIMARY KEY`: Ensures each customer is uniquely identified.
+* `NOT NULL`: Enforces that every customer **must have a name**.
+* `UNIQUE (phone)`: No two customers can register with the same phone number.
+
+🗣️ **Oral Tip**: “Phone being unique prevents duplicate registration and `AUTO_INCREMENT` replaces explicit sequence logic.”
+
+---
+
+### 🟩 **3. Create the `Branch` Table**
+
+```sql
+CREATE TABLE Branch (
+    branch_id INT AUTO_INCREMENT PRIMARY KEY,
+    branch_name VARCHAR(50),
+    location VARCHAR(100)
+);
+```
+
+🔸 **Highlights**:
+
+* Again uses `AUTO_INCREMENT` for unique branch IDs.
+* Stores branch info like **name and location**.
+
+🗣️ **Oral Tip**: “Each account or loan links to a branch, so this acts like a hub.”
+
+---
+
+### 🟩 **4. Create the `Account` Table**
+
+```sql
+CREATE TABLE Account (
+    acct_no INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    branch_id INT,
+    balance DECIMAL(10,2) CHECK (balance >= 0),
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id),
+    FOREIGN KEY (branch_id) REFERENCES Branch(branch_id)
+);
+```
+
+🔸 **Highlights**:
+
+* `acct_no` is a unique account number (auto-generated).
+* Links to both **customer** and **branch** using `FOREIGN KEY`.
+* `CHECK (balance >= 0)` prevents **negative balances**.
+
+🗣️ **Oral Tip**: “This table models the one-to-many relationship: one customer → many accounts.”
+
+---
+
+### 🟩 **5. Create the `Loan` Table**
+
+```sql
+CREATE TABLE Loan (
+    loan_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    branch_id INT,
+    amount DECIMAL(10,2),
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id),
+    FOREIGN KEY (branch_id) REFERENCES Branch(branch_id)
+);
+```
+
+🔸 **Highlights**:
+
+* Same pattern as `Account`, but for **loans**.
+* Includes `amount` with precision (`DECIMAL(10,2)`).
+
+🗣️ **Oral Tip**: “Both loans and accounts are financial products tied to customers and branches.”
+
+---
+
+### 🟩 **6. Create the `Transaction` Table**
+
+```sql
+CREATE TABLE Transaction (
+    txn_id INT AUTO_INCREMENT PRIMARY KEY,
+    acct_no INT,
+    txn_type VARCHAR(10) CHECK (txn_type IN ('deposit', 'withdraw')),
+    amount DECIMAL(10,2),
+    txn_date DATE,
+    FOREIGN KEY (acct_no) REFERENCES Account(acct_no)
+);
+```
+
+🔸 **Highlights**:
+
+* `txn_type` is restricted using `CHECK` — ensures only 'deposit' or 'withdraw'.
+* Linked to `acct_no` via `FOREIGN KEY`.
+
+🗣️ **Oral Tip**: “The `CHECK` constraint acts like a form validator for allowed transaction types.”
+
+---
+
+### 🟦 **7. Insert Sample Data**
+
+```sql
+-- For Customer
+INSERT INTO Customer (name, address, phone) VALUES 
+('Pranav Bhosale', 'Pune', '9988776655'), ...;
+
+-- For Branch
+INSERT INTO Branch (branch_name, location) VALUES
+('Pune Main', 'Pune'), ...;
+
+-- For Account
+INSERT INTO Account (customer_id, branch_id, balance) VALUES
+(1, 1, 15000.00), ...;
+```
+
+🔸 **Purpose**: Test the schema with **realistic data** for customers, branches, accounts, loans, and transactions.
+
+🗣️ **Oral Tip**: “The sample values simulate common scenarios and ensure referential integrity is working.”
+
+---
+
+### 🟩 **8. Create Views**
+
+```sql
+CREATE VIEW Customer_Account_View AS
+SELECT c.name, a.acct_no, a.balance, b.branch_name
+FROM Customer c
+JOIN Account a ON c.customer_id = a.customer_id
+JOIN Branch b ON a.branch_id = b.branch_id;
+```
+
+🔸 **Why Views?**
+
+* Abstracts complex joins.
+* Useful for **reporting**, **frontend displays**, or **admin dashboards**.
+
+🗣️ **Oral Tip**: “Instead of writing JOINs repeatedly, we use views as reusable virtual tables.”
+
+---
+
+### 🟩 **9. Create Index**
+
+```sql
+CREATE INDEX idx_customer_name ON Customer(name ASC);
+```
+
+🔸 **Why Indexes?**
+
+* Makes queries like `ORDER BY name` or `WHERE name = '...'` **much faster**.
+
+🗣️ **Oral Tip**: “Think of it like a book index — speeds up lookup in large datasets.”
+
+---
+
+### 🟩 **10. Simulate Sequences**
+
+```sql
+SELECT AUTO_INCREMENT 
+FROM information_schema.tables 
+WHERE table_name = 'Account' AND table_schema = 'BankDB';
+```
+
+🔸 MySQL doesn’t use `CREATE SEQUENCE` like Oracle.
+
+* Instead, every `AUTO_INCREMENT` field has a **next value stored** in metadata.
+
+🗣️ **Oral Tip**: “This shows how we simulate sequence behavior in MySQL without explicitly creating one.”
+
+---
+
+## ✅ Final Wrap-Up
+
+📌 This program teaches:
+
+* **ER → Relational** mapping
+* Use of **primary & foreign keys**
+* Importance of **views**, **indexes**, and **data integrity**
+* MySQL-specific techniques like `AUTO_INCREMENT` for sequence simulation
+
+🗣️ **Oral Closing Statement**:
+*"This schema models a real-world bank system with normalized relationships, integrity constraints, reusable views, and performance-optimized indexing. Every design choice supports efficient data management and retrieval in a transactional banking environment."*
+
+---
+
+Would you like this formatted as a printable `.txt` or `.pdf` file too?
+

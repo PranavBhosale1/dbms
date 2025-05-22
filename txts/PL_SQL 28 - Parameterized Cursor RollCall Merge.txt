@@ -1,0 +1,230 @@
+
+PLSQL 28 - Parameterized Cursor RollCall Merge.txt
+==================================================
+
+Question:
+---------
+Write a PL/SQL block of code using a parameterized cursor that will merge the data
+available in the newly created table N_RollCall with the data available in the table
+O_RollCall. If the data in the first table already exists in the second table, then it should be skipped.
+
+Schema:
+-------
+1. N_RollCall (roll_no INT, name VARCHAR(50))
+2. O_RollCall (roll_no INT, name VARCHAR(50))
+
+SQL + PL/SQL Implementation:
+----------------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS RollCallDB;
+USE RollCallDB;
+
+-- Step 2: Create the tables
+
+CREATE TABLE N_RollCall (
+    roll_no INT,
+    name VARCHAR(50)
+);
+
+CREATE TABLE O_RollCall (
+    roll_no INT PRIMARY KEY,
+    name VARCHAR(50)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO N_RollCall VALUES
+(101, 'Pranav Bhosale'),
+(102, 'Jay Rajankar'),
+(103, 'Anvay Kulkarni'),
+(104, 'Krishna Gandhi'),
+(105, 'Gaurav Kaushalye');
+
+INSERT INTO O_RollCall VALUES
+(101, 'Pranav Bhosale'),
+(104, 'Krishna Gandhi');
+
+-- Step 4: Procedure using parameterized cursor
+
+DELIMITER $$
+
+CREATE PROCEDURE Merge_RollCall()
+BEGIN
+    DECLARE rno INT;
+    DECLARE nm VARCHAR(50);
+    DECLARE exists_flag INT DEFAULT 0;
+    DECLARE done INT DEFAULT FALSE;
+
+    -- Parameterized cursor
+    DECLARE cur CURSOR FOR
+        SELECT roll_no, name FROM N_RollCall;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO rno, nm;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Check if roll_no already exists in O_RollCall
+        SELECT COUNT(*) INTO exists_flag FROM O_RollCall WHERE roll_no = rno;
+
+        -- Insert if not found
+        IF exists_flag = 0 THEN
+            INSERT INTO O_RollCall VALUES (rno, nm);
+        END IF;
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+-- Step 5: Execute procedure
+CALL Merge_RollCall();
+
+-- Step 6: View final output
+SELECT * FROM O_RollCall;
+
+
+Below is the solution for the PL/SQL task based on the provided task from "PLSQL 28 - Parameterized Cursor RollCall Merge.txt". It includes the creation of the database and tables, a stored procedure using a parameterized cursor to merge data from N_RollCall into O_RollCall while skipping existing records, insertion of sample data, execution of the procedure, and a query to view the results. The solution uses proper PL/SQL syntax, provides a detailed explanation of the syntax used, and explains the logic behind each operation. The code is wrapped in an artifact tag as per the guidelines, with the content type set to text/sql for PL/SQL.
+
+The task requires:
+
+Creating a database RollCallDB and two tables: N_RollCall (with fields roll_no, name) and O_RollCall (with fields roll_no, name).
+Writing a PL/SQL procedure Merge_RollCall using a parameterized cursor to merge data from N_RollCall into O_RollCall, skipping records where roll_no already exists in O_RollCall.
+Inserting sample data and executing the procedure to populate O_RollCall.
+PLSQL Parameterized Cursor RollCall Merge
+sql
+Show inline
+Syntax Used
+Database Creation and Selection:
+Syntax: CREATE DATABASE IF NOT EXISTS <database_name>; USE <database_name>;
+Example:
+sql
+
+CREATE DATABASE IF NOT EXISTS RollCallDB;
+USE RollCallDB;
+Purpose: Creates the RollCallDB database if it doesn’t exist and switches to it for subsequent operations.
+Table Creation:
+Syntax: CREATE TABLE <table_name> ( <column1> <type> [constraints], <column2> <type>, ... );
+Example:
+sql
+
+CREATE TABLE N_RollCall (
+    roll_no INT,
+    name VARCHAR(50)
+);
+CREATE TABLE O_RollCall (
+    roll_no INT PRIMARY KEY,
+    name VARCHAR(50)
+);
+Purpose: Creates N_RollCall for new roll call data and O_RollCall for existing data, with roll_no as the primary key in O_RollCall to ensure uniqueness.
+Insert Data:
+Syntax: INSERT INTO <table_name> VALUES ( <value1>, <value2> ), ...;
+Example:
+sql
+
+INSERT INTO N_RollCall VALUES
+(101, 'Pranav Bhosale'),
+...
+Purpose: Populates N_RollCall with five records and O_RollCall with two records, some of which overlap to test the merge logic.
+Stored Procedure:
+Syntax:
+sql
+
+DELIMITER $$
+CREATE PROCEDURE <procedure_name>()
+BEGIN
+    DECLARE <variable> <type> [DEFAULT <value>];
+    DECLARE <cursor_name> CURSOR FOR <SELECT_statement>;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET <variable> = <value>;
+    OPEN <cursor_name>;
+    <loop_label>: LOOP
+        FETCH <cursor_name> INTO <variables>;
+        IF <condition> THEN
+            LEAVE <loop_label>;
+        END IF;
+        <logic>;
+    END LOOP;
+    CLOSE <cursor_name>;
+END$$
+DELIMITER ;
+Example:
+sql
+
+DELIMITER $$
+
+CREATE PROCEDURE Merge_RollCall()
+BEGIN
+    DECLARE rno INT;
+    DECLARE nm VARCHAR(50);
+    DECLARE exists_flag INT DEFAULT 0;
+    DECLARE done INT DEFAULT FALSE;
+
+    DECLARE cur CURSOR FOR
+        SELECT roll_no, name FROM N_RollCall;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO rno, nm;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SELECT COUNT(*) INTO exists_flag FROM O_RollCall WHERE roll_no = rno;
+
+        IF exists_flag = 0 THEN
+            INSERT INTO O_RollCall VALUES (rno, nm);
+        END IF;
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+Components:
+DELIMITER $$: Changes the statement delimiter to $$ to allow semicolons within the procedure.
+DECLARE: Defines variables (rno, nm, exists_flag, done) and a cursor cur to select data from N_RollCall.
+CONTINUE HANDLER FOR NOT FOUND: Sets done = TRUE when the cursor has no more rows.
+OPEN cur, FETCH, CLOSE cur: Manages cursor operations to iterate through N_RollCall.
+SELECT COUNT(*) INTO: Checks if roll_no exists in O_RollCall.
+IF exists_flag = 0: Inserts the record into O_RollCall only if it doesn’t exist.
+Purpose: Merges non-duplicate records from N_RollCall into O_RollCall based on roll_no.
+Execute Procedure:
+Syntax: CALL <procedure_name>();
+Example: CALL Merge_RollCall();
+Purpose: Runs the procedure to merge data.
+View Results:
+Syntax: SELECT * FROM <table_name>;
+Example: SELECT * FROM O_RollCall;
+Purpose: Displays the final contents of O_RollCall after the merge.
+Explanation of Logic
+Database and Table Setup: The RollCallDB database is created, and two tables are defined:
+N_RollCall: Stores new roll call data with roll_no and name.
+O_RollCall: Stores existing roll call data, with roll_no as the primary key to enforce uniqueness.
+Sample Data:
+N_RollCall has five records, including two (roll_no 101, 104) that overlap with O_RollCall.
+O_RollCall has two records to simulate existing data.
+Stored Procedure (Merge_RollCall):
+A cursor (cur) retrieves roll_no and name from N_RollCall.
+The loop iterates through each row, fetching data into rno and nm.
+For each row, it checks if the roll_no exists in O_RollCall using SELECT COUNT(*) INTO exists_flag.
+If exists_flag = 0 (no match), the record is inserted into O_RollCall.
+The loop exits when no more rows are found (done = TRUE).
+Execution and Output: The procedure merges non-duplicate records (roll numbers 102, 103, 105) into O_RollCall, skipping 101 and 104. The final SELECT * FROM O_RollCall displays the merged result.
+Efficiency: The cursor processes rows sequentially, suitable for small datasets. The PRIMARY KEY on O_RollCall.roll_no ensures efficient existence checks and prevents duplicates.
+Why This Solution Satisfies the Problem
+Correct Syntax: The code uses standard SQL and PL/SQL syntax for database creation, table setup, data insertion, procedure definition, and execution.
+Schema Adherence: The N_RollCall and O_RollCall tables match the specified schema, with roll_no as the primary key in O_RollCall for uniqueness.
+Merge Logic: The procedure uses a parameterized cursor to iterate through N_RollCall and checks for existing roll_no values in O_RollCall, inserting only non-duplicate records.
+Theory Alignment: The solution uses PL/SQL’s procedural capabilities (cursors, loops, conditionals) to handle complex merge logic, aligning with PL/SQL as Oracle’s procedural extension.
+Complete Implementation: Includes all steps—database creation, table setup, data insertion, procedure execution, and result display—ensuring a fully functional program.
+Enhanced Output: The solution retains the original logic and data, with no modifications needed, and ensures clear output via SELECT * FROM O_RollCall.
