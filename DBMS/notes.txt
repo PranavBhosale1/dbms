@@ -1,0 +1,298 @@
+Here’s a clean and complete version of your **DBMS Short Notes**, neatly structured and expanded to cover everything you’ve listed — including additional MongoDB and SQL/PLSQL concepts:
+
+---
+
+# ✅ DBMS Short Notes (Detailed & Clean)
+
+---
+
+## UNIT I – Introduction to DBMS
+
+**1. What is DBMS?**
+A software system for managing databases. It allows users to create, retrieve, update, and manage data while ensuring **security**, **integrity**, and **concurrency**.
+
+**2. Advantages over File System:**
+
+* Reduces redundancy
+* Ensures consistency
+* Enables data sharing
+* Offers data security
+* Supports backup and recovery
+* Maintains integrity through constraints
+
+**3. DBMS Architecture Levels:**
+
+* **Internal Level:** Physical data storage
+* **Conceptual Level:** Logical schema structure
+* **External Level:** User-specific views
+
+**4. Types of Data Models:**
+
+* **Hierarchical:** Tree-like structure
+* **Network:** Graph of records
+* **Relational:** Tables (relations)
+* **Object-Oriented:** Classes and inheritance
+* **ER Model:** Entities and relationships
+
+**5. Entity:**
+A real-world object (e.g., Student)
+
+**6. Attributes:**
+Descriptive properties (e.g., Name, Age)
+
+**7. Types of Keys:**
+
+* **Primary Key:** Unique identifier
+* **Candidate Key:** Multiple possible PKs
+* **Super Key:** Any set that uniquely identifies
+* **Foreign Key:** Refers to primary key in another table
+
+**8. ER Diagram:**
+A visual representation of entities, attributes, and relationships.
+
+**9. EER (Enhanced ER):**
+Adds Generalization, Specialization, Aggregation to the basic ER model.
+
+**10. ER to Table Conversion:**
+
+* Each entity → Table
+* Attributes → Columns
+* Relationships → Foreign keys
+* Handle ISA relationships (Generalization/Specialization)
+
+---
+
+## UNIT II – Relational Algebra, SQL & PL/SQL
+
+**11. Relational Algebra:**
+Procedural query language using operations like **σ (Select)**, **π (Project)**, **Join**, **∪ (Union)**.
+
+**12. SQL Statements:**
+
+* **DDL:** CREATE, ALTER, DROP
+* **DML:** SELECT, INSERT, UPDATE, DELETE
+* **DCL:** GRANT, REVOKE
+* **TCL:** COMMIT, ROLLBACK, SAVEPOINT
+
+**13. View:**
+Virtual table generated from SQL query output.
+
+**14. Index:**
+Structure to speed up retrieval.
+
+* **Implicit:** Created by DBMS automatically
+* **Explicit:** Manually defined using `CREATE INDEX`
+
+**15. Cursor:**
+Pointer for row-wise data traversal.
+
+* **Implicit:** Automatically handled by SQL
+* **Explicit:** Declared and managed by programmer
+
+**16. Trigger:**
+Auto-executing block for events like INSERT, UPDATE.
+
+**17. Stored Procedure:**
+Precompiled SQL program stored in DB.
+
+**18. Aggregate (Group) Functions:**
+
+* `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`
+
+**19. Types of Joins:**
+
+* **Inner Join:** Matching rows from both tables
+* **Left Join:** All from left + matched from right
+* **Right Join:** All from right + matched from left
+* **Full Outer Join:** All rows from both sides
+* **Self Join:** Table joins with itself
+* **Cross Join:** Cartesian product
+
+**20. SQL vs PL/SQL:**
+
+* **SQL:** Declarative, executes single query
+* **PL/SQL:** Procedural, allows control structures
+
+**21. Procedure vs Function:**
+
+* **Procedure:** No return required, can return via OUT
+* **Function:** Returns a single value using RETURN
+
+**22. SQL Objects:**
+
+* **Tables**
+* **Views**
+* **Sequences**
+* **Indexes**
+* **Synonyms**
+
+---
+
+## UNIT III – Advanced DB & Big Data
+
+**23. NoSQL:**
+Non-relational database for semi-structured/unstructured data. Schema-less. Scales horizontally.
+
+**24. NoSQL Types:**
+
+* **Key-Value:** (Redis)
+* **Document Store:** JSON-like (MongoDB)
+* **Column Store:** HBase, Cassandra
+* **Graph DB:** Nodes/edges (Neo4j)
+
+**25. CAP Theorem:**
+In distributed DB, you can only ensure 2 of:
+
+* **Consistency**
+* **Availability**
+* **Partition Tolerance**
+
+**26. BASE Properties (vs ACID):**
+
+* **Basically Available**
+* **Soft State**
+* **Eventual Consistency**
+
+**27. SQL vs NoSQL:**
+
+| Feature     | SQL               | NoSQL              |
+| ----------- | ----------------- | ------------------ |
+| Schema      | Fixed             | Flexible           |
+| Scalability | Vertical          | Horizontal         |
+| Data Format | Structured        | Semi/Unstructured  |
+| Examples    | MySQL, PostgreSQL | MongoDB, Cassandra |
+
+**28. 5 V's of Big Data:**
+
+* **Volume**, **Velocity**, **Variety**, **Veracity**, **Value**
+
+---
+
+## UNIT IV – Relational Design
+
+**29. Relational Model:**
+Data = Tables (relations), Rows = Tuples, Columns = Attributes
+
+**30. Functional Dependency (FD):**
+If A → B, knowing A gives B. (RollNo → Name)
+
+**31. Canonical Cover:**
+Minimal form of FDs with no redundancy
+
+**32. Normalization Levels:**
+
+* **1NF:** Atomic values only
+* **2NF:** No partial dependency (on part of PK)
+* **3NF:** No transitive dependency
+* **BCNF:** All determinants must be candidate keys
+* **4NF:** No multivalued dependency
+* **5NF:** No join dependency
+
+**33. Decomposition:**
+Splitting relations to eliminate redundancy, ensure dependency preservation and lossless join.
+
+**34. Trivial FD:**
+A → B is trivial if B ⊆ A
+
+**35. Armstrong's Axioms:**
+Used to infer all FDs:
+
+* **Reflexivity**: If Y ⊆ X, then X → Y
+* **Augmentation**: If X → Y, then XZ → YZ
+* **Transitivity**: If X → Y and Y → Z, then X → Z
+
+---
+
+## UNIT V – Transactions & Query Processing
+
+**36. Transaction:**
+A sequence of DB operations treated as a single unit.
+
+**37. ACID Properties:**
+
+* **Atomicity**
+* **Consistency**
+* **Isolation**
+* **Durability**
+
+**38. Schedule:**
+Order in which transactions execute their operations
+
+**39. Serial vs Concurrent Schedule:**
+
+* **Serial:** Executes one transaction at a time
+* **Concurrent:** Interleaved operations from multiple transactions
+
+**40. Deadlock:**
+Two or more transactions wait endlessly for resources held by each other.
+
+**41. Checkpoint:**
+Savepoint used to reduce recovery time after crash
+
+**42. Shadow Paging:**
+Maintains two copies of pages — original and shadow — changes are applied only after commit
+
+---
+
+## UNIT VI – Database Architectures
+
+**43. Parallel DBMS:**
+Uses multiple CPUs/disks for parallel query execution
+
+**44. Distributed DBMS:**
+Data stored at multiple locations but managed as a single system
+
+**45. Distributed DB Types:**
+
+* **Homogeneous:** Same DBMS
+* **Heterogeneous:** Different DBMS
+
+**46. Commit Protocols:**
+Ensure all-or-nothing transaction in distributed systems
+
+* **Two-Phase Commit (2PC)** is commonly used
+
+**47. Concurrency Control Methods:**
+
+* **Lock-based**
+* **Timestamp Ordering**
+* **Optimistic Concurrency Control**
+
+---
+
+## MongoDB & JSON Extras
+
+**1. Structured, Semi-Structured, Unstructured:**
+
+* **Structured:** Tables (SQL)
+* **Semi-Structured:** JSON/XML (MongoDB)
+* **Unstructured:** Images, videos, etc.
+
+**2. JSON:**
+**JavaScript Object Notation** – lightweight format for storing and transporting data.
+
+**3. MongoDB Properties:**
+
+* Schema-less
+* Scalable
+* High availability
+* Uses BSON (Binary JSON)
+
+**4. MongoDB Operators:**
+
+* `$or`: Match if *any* condition is true
+* `$in`: Match if *value* is in list
+  **Difference:** `$or` works with conditions, `$in` with values in an array
+
+**5. MongoDB Join Alternative:**
+Use **embedded documents** or `$lookup` for aggregation
+
+**6. SQL vs MongoDB:**
+
+* **Joins → Embedded documents**
+* **Tables → Collections**
+* **Rows → Documents**
+
+---
+
+Let me know if you want a downloadable PDF version or flashcards for revision.
