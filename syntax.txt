@@ -1,0 +1,331 @@
+| Keyword                  | Meaning & Use                                                                                 | Example / Context                                             |
+| ------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `DELIMITER`              | Tells MySQL to temporarily use something else instead of `;` to end statements inside a block | `DELIMITER $$`                                                |
+| `CREATE PROCEDURE`       | Defines a stored procedure with logic you can call again                                      | `CREATE PROCEDURE calculate_tax()`                            |
+| `CALL`                   | Runs a stored procedure                                                                       | `CALL calculate_tax();`                                       |
+| `CREATE FUNCTION`        | Defines a stored function that returns a value                                                | `CREATE FUNCTION calc_total(...) RETURNS INT`                 |
+| `RETURN`                 | Sends back the result of a function                                                           | `RETURN net_salary;`                                          |
+| `DECLARE`                | Declares a **variable**, **cursor**, or **error handler**                                     | `DECLARE total INT;`                                          |
+| `BEGIN ... END`          | Groups multiple statements in a block                                                         | `BEGIN ... END`                                               |
+| `SET`                    | Assigns values to variables                                                                   | `SET total = 100;`                                            |
+| `IF ... THEN ... END IF` | Conditional logic, like an `if` statement in C or Python                                      | `IF marks > 90 THEN ...`                                      |
+| `ELSEIF`, `ELSE`         | Add alternate branches in `IF` condition                                                      | `ELSEIF total > 50 THEN ...`                                  |
+| `CURSOR`                 | A pointer to a row set returned by a SELECT query                                             | `DECLARE cur CURSOR FOR SELECT ...`                           |
+| `OPEN`                   | Opens the cursor so you can fetch data from it                                                | `OPEN cur;`                                                   |
+| `FETCH`                  | Retrieves one row at a time from an open cursor into variables                                | `FETCH cur INTO var1, var2;`                                  |
+| `LOOP`, `END LOOP`       | Loops through logic repeatedly (often with cursor fetch)                                      | `LOOP ... FETCH ... END LOOP;`                                |
+| `LEAVE`                  | Exits a loop                                                                                  | `IF done THEN LEAVE label; END IF;`                           |
+| `CONTINUE HANDLER`       | Handles exceptions like "no more rows" during cursor use                                      | `DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;`        |
+| `SIGNAL SQLSTATE`        | Manually throws an error with a message                                                       | `SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid value';` |
+| `NOT FOUND`              | A condition triggered when `FETCH` has no more rows                                           | used in `CONTINUE HANDLER`                                    |
+| `AUTO_INCREMENT`         | Automatically generate next integer value (like a sequence)                                   | `emp_id INT AUTO_INCREMENT`                                   |
+| `PRIMARY KEY`            | Uniquely identifies each row in a table                                                       | `PRIMARY KEY (id)`                                            |
+| `FOREIGN KEY`            | Links one table to another                                                                    | `FOREIGN KEY (dept_id) REFERENCES Department(dept_id)`        |
+| `CHECK`                  | Enforces condition on a column value                                                          | `CHECK (balance >= 0)`                                        |
+| `TRIGGER`                | A block that automatically executes on INSERT, UPDATE, DELETE                                 | `CREATE TRIGGER trg_before_insert`                            |
+| `NEW`                    | Refers to the incoming row values in a `BEFORE`/`AFTER` trigger                               | `SET NEW.noc = NEW.noc + 1`                                   |
+
+
+| Keyword           | Meaning & Use                                                             | Example                                                 |
+| ----------------- | ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `$match`          | Filters documents (like `WHERE`)                                          | `{ $match: { city: 'Pune' } }`                          |
+| `$group`          | Groups documents by key and computes aggregates like `$sum`, `$avg`, etc. | `{ $group: { _id: '$city', total: { $sum: '$pop' } } }` |
+| `$sum`, `$avg`    | Aggregation operators inside `$group`                                     | `{ $sum: '$population' }`                               |
+| `$project`        | Selects and reshapes output fields                                        | `{ $project: { name: 1, city: 1 } }`                    |
+| `$sort`           | Sorts results                                                             | `{ $sort: { name: 1 } }`                                |
+| `$lookup`         | Joins one collection with another (similar to SQL JOIN)                   | Advanced usage                                          |
+| `$limit`, `$skip` | Limits number of documents or skips some                                  | Pagination style queries                                |
+
+
+| Term       | Meaning & Role                                                              | Example                             |
+| ---------- | --------------------------------------------------------------------------- | ----------------------------------- |
+| `map`      | A function that processes each document and **emits** a `(key, value)` pair | `emit(this.city, this.population);` |
+| `reduce`   | A function that receives each key and a list of values, then combines them  | `return Array.sum(values);`         |
+| `emit`     | Outputs a key-value pair from the `map` function                            | `emit('city', pop);`                |
+| `finalize` | (Optional) Post-process results of `reduce`                                 | `return result / count;`            |
+| `out`      | Specifies where to store the result collection                              | `{ out: 'output_collection' }`      |
+
+💡 Real-Life Analogies:
+emit = You shout the word “Math” and someone else keeps a tally.
+
+reduce = That person adds up all the "Math" shout values and gives a total.
+
+cursor = Like going through a spreadsheet row by row, doing some action for each row.
+
+trigger = Like a door alarm — when someone opens the door (inserts data), the alarm (trigger) runs.
+
+✅ You’ve Actively Used These In:
+emit / reduce logic → In project 11, 14, 18 (group by, sum, count)
+
+cursor → Every time we processed student grades row-by-row
+
+function → When calculating total, tax, or GPA
+
+trigger → Library book return/insertion adjustment
+
+CONTINUE HANDLER → Catching cursor end
+
+SIGNAL → Manual error for invalid marks
+
+Awesome — let’s **fill in all missing syntax explanations** across everything we’ve used so far in your SQL, PL/SQL, MongoDB, and MapReduce work.
+
+This will be a complete **reference of any keywords, clauses, and constructs** not covered earlier. I’ll keep it grouped and practical.
+
+---
+
+## 🟩 **Additional MySQL / PL-SQL Syntax Elements**
+
+---
+
+### 🔸 `IN`, `OUT`, `INOUT` (Procedure Parameters)
+
+Defines how parameters behave in stored procedures.
+
+| Type    | Meaning                         | Example Usage     |
+| ------- | ------------------------------- | ----------------- |
+| `IN`    | Input only (default)            | `IN roll_no INT`  |
+| `OUT`   | Output only — procedure sets it | `OUT total INT`   |
+| `INOUT` | Acts as both input and output   | `INOUT marks INT` |
+
+---
+
+### 🔸 `DEFAULT`
+
+Sets a **default value** for a column or variable.
+
+```sql
+DECLARE fine INT DEFAULT 0;
+```
+
+```sql
+fine INT DEFAULT 0
+```
+
+---
+
+### 🔸 `NOW()` and `CURDATE()`
+
+* `NOW()` – current **timestamp** (date + time)
+* `CURDATE()` – current **date** only
+
+```sql
+INSERT INTO Fine VALUES (101, CURDATE(), 500);
+```
+
+---
+
+### 🔸 `DATEDIFF()`
+
+Gives number of days between two dates.
+
+```sql
+SET days_late = DATEDIFF(CURDATE(), doi);
+```
+
+---
+
+### 🔸 `CHAR(n)` vs `VARCHAR(n)`
+
+* `CHAR(n)` – fixed-length
+* `VARCHAR(n)` – variable-length
+
+We use `CHAR(1)` often for status like `'I'` / `'R'`.
+
+---
+
+### 🔸 `AFTER UPDATE`, `BEFORE INSERT` (Trigger Timing)
+
+Defines **when** the trigger executes:
+
+* `BEFORE` = before actual operation
+* `AFTER` = after operation completes
+
+```sql
+CREATE TRIGGER trg AFTER UPDATE ON Library ...
+```
+
+---
+
+### 🔸 `NEW` and `OLD`
+
+Used **inside triggers**:
+
+* `NEW` – new incoming row (for INSERT or UPDATE)
+* `OLD` – old row value (for DELETE or UPDATE)
+
+```sql
+SET NEW.noc = NEW.noc + 1;
+```
+
+---
+
+### 🔸 `SIGNAL SQLSTATE`
+
+Manually raise an error.
+
+```sql
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid marks';
+```
+
+---
+
+### 🔸 `AUTO_INCREMENT`
+
+Used to simulate **sequence** in MySQL.
+
+```sql
+emp_id INT AUTO_INCREMENT PRIMARY KEY
+```
+
+---
+
+### 🔸 `INFORMATION_SCHEMA`
+
+MySQL’s system metadata database.
+
+```sql
+SELECT AUTO_INCREMENT 
+FROM information_schema.tables 
+WHERE table_name = 'Employee';
+```
+
+---
+
+### 🔸 `VIEW`
+
+Virtual table based on `SELECT` query.
+
+```sql
+CREATE VIEW IssuedBooks AS
+SELECT * FROM Borrower WHERE Status = 'I';
+```
+
+---
+
+### 🔸 `INDEX`
+
+Improves query speed for searches/sorts.
+
+```sql
+CREATE INDEX idx_name ON Customer(name);
+```
+
+---
+
+## 🟦 MongoDB Syntax Extras
+
+---
+
+### 🔸 `db.collection.insertMany()` or `.insertOne()`
+
+Insert documents into a MongoDB collection.
+
+```js
+db.students.insertMany([
+  { name: "Pranav", city: "Pune", marks: 90 },
+  { name: "Jay", city: "Mumbai", marks: 85 }
+]);
+```
+
+---
+
+### 🔸 `db.collection.find()`
+
+Selects all documents (like `SELECT *`)
+
+```js
+db.students.find({ city: "Pune" })
+```
+
+---
+
+### 🔸 `ObjectId()`
+
+Mongo uses ObjectIds for `_id` fields automatically.
+
+---
+
+### 🔸 `db.collection.aggregate([...])`
+
+Starts an **aggregation pipeline**.
+
+```js
+db.students.aggregate([
+  { $match: { city: "Pune" } },
+  { $group: { _id: "$city", avgMarks: { $avg: "$marks" } } }
+])
+```
+
+---
+
+### 🔸 `$addFields`, `$unset`, `$merge`
+
+Advanced stages:
+
+* `$addFields`: Add computed fields
+* `$unset`: Remove fields
+* `$merge`: Save output to new collection
+
+---
+
+## 🟥 MapReduce (Logic Syntax Recap)
+
+---
+
+### 🔸 `emit(key, value)`
+
+Used inside the `map()` function to emit results.
+
+```js
+emit(this.city, this.population);
+```
+
+---
+
+### 🔸 `reduce(key, values[])`
+
+Combines all values for each key.
+
+```js
+function reduce(key, values) {
+  return Array.sum(values);
+}
+```
+
+---
+
+### 🔸 `finalize`
+
+Post-processing step after `reduce`.
+
+---
+
+### 🔸 `db.collection.mapReduce(...)`
+
+```js
+db.cities.mapReduce(
+  mapFunction,
+  reduceFunction,
+  { out: "cityPopulationTotal" }
+);
+```
+
+---
+
+## 🧠 Summary: Syntax You Should Know for Viva or Projects
+
+| Type      | Must-Know Keywords                                                                                                |
+| --------- | ----------------------------------------------------------------------------------------------------------------- |
+| SQL/PLSQL | `CALL`, `CURSOR`, `FETCH`, `TRIGGER`, `SIGNAL`, `AUTO_INCREMENT`, `INDEX`, `VIEW`, `HANDLER`, `DEFAULT`, `IN/OUT` |
+| MongoDB   | `aggregate`, `$group`, `$match`, `$project`, `find`, `insertMany`, `ObjectId`                                     |
+| MapReduce | `emit`, `map`, `reduce`, `out`, `finalize`                                                                        |
+
+---
+
+Would you like:
+
+* A **visual mind map or diagram** of these keywords?
+* Sample **viva questions** using these terms?
+* Quick **match-the-definition** worksheet?
+
+Just say the word!
